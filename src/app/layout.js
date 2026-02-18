@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Link from "next/link";
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata = {
   title: "Shivaji Hospital & Heart Care Centre",
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
         <Header />
         {children}
         <Analytics />
+        <SpeedInsights />
         <Footer />
 
         {/* Global Floating Book Button */}
