@@ -13,9 +13,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <Analytics />
         <Header />
         {children}
-        <Analytics />
         <Footer />
 
         {/* Global Floating Book Button */}
