@@ -1,0 +1,326 @@
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Simple Header */
+.simple-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-3) 0;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+/* .logo {
+    font-family: var(--font-serif);
+    font-size: var(--text-4xl);
+    font-weight: 1000;
+    color: var(--color-text-primary);
+    text-decoration: none;
+} */
+
+.simple-header nav {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.simple-header nav a {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    transition: color var(--transition-fast);
+    font-size: var(--text-sm);
+    color: var(--color-teal);
+}
+
+/* Hero Section */
+.hero {
+    position: relative;
+}
+
+.hero .container {
+    position: relative;
+    z-index: 10;
+}
+
+.hero-content-box {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(2px);
+    padding: var(--space-8) var(--space-6);
+    border-radius: var(--radius-2xl);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: var(--text-6xl);
+    margin-bottom: var(--space-3);
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
+}
+
+.hero-subtitle {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-6);
+    font-weight: 500;
+}
+
+.hero-actions {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.hero-call-btn:hover {
+    background-color: var(--color-teal);
+    color: var(--color-white);
+    border-color: var(--color-teal);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Services Section */
+.services {
+    background: var(--color-white);
+}
+
+.service-card {
+    text-align: center;
+    padding: var(--space-6);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.service-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    background: var(--color-accent-blue);
+    color: var(--color-teal);
+}
+
+.service-card h3 {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-2);
+}
+
+/* Featured Doctor */
+.featured-doctor {
+    background: linear-gradient(135deg, var(--color-accent-sage) 0%, #F1F8E9 100%);
+}
+
+.doctor-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: var(--space-8);
+    align-items: center;
+}
+
+.doctor-qualifications {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    margin-top: var(--space-2);
+}
+
+/* Contact CTA */
+.contact-cta {
+    background: var(--color-white);
+}
+
+.cta-actions {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Footer */
+.footer {
+    background: var(--color-text-primary);
+    color: var(--color-white);
+    padding: var(--space-8) 0 var(--space-4);
+    margin-top: auto;
+}
+
+.footer h4 {
+    color: var(--color-white);
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-2);
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.footer-links a {
+    color: rgba(255, 255, 255, 0.7);
+    transition: color var(--transition-fast);
+}
+
+.footer-links a:hover {
+    color: var(--color-white);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: var(--space-4);
+    text-align: center;
+}
+
+.footer-bottom p {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Floating Book Button */
+.floating-book-btn {
+    position: fixed;
+    bottom: var(--space-4);
+    right: var(--space-4);
+    background: var(--color-teal);
+    color: var(--color-white);
+    padding: var(--space-3);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 600;
+    transition: all var(--transition-normal);
+    z-index: 50;
+}
+
+.floating-book-btn:hover {
+    background: var(--color-teal-dark);
+    transform: translateY(-4px);
+    box-shadow: 0 25px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Doctor Carousel Navigation */
+.doctor-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    z-index: 10;
+    box-shadow: var(--shadow-md);
+}
+
+.doctor-nav-btn:hover {
+    background: var(--color-white);
+    border-color: var(--color-teal);
+    color: var(--color-teal);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.doctor-nav-prev {
+    left: -60px;
+}
+
+.doctor-nav-next {
+    right: -60px;
+}
+
+.doctor-dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+}
+
+.doctor-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    background: var(--color-border);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 0;
+}
+
+.doctor-dot.active {
+    background: var(--color-teal);
+    width: 32px;
+}
+
+.doctor-dot:hover {
+    background: var(--color-teal);
+    opacity: 0.7;
+}
+
+@media (max-width: 1024px) {
+    .doctor-nav-prev {
+        left: 10px;
+    }
+
+    .doctor-nav-next {
+        right: 10px;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .simple-header nav {
+        display: none;
+    }
+
+    .hero {
+        padding: var(--space-8) 0;
+    }
+
+    .doctor-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .doctor-qualifications {
+        justify-content: center;
+    }
+
+    .floating-book-btn span {
+        display: none;
+    }
+
+    .floating-book-btn {
+        padding: var(--space-2);
+        width: 56px;
+        height: 56px;
+        justify-content: center;
+    }
+}
