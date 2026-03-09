@@ -208,11 +208,19 @@ export const getAppointments = () => {
 
 export const addAppointment = (appointment) => {
     const data = getHospitalData();
+    // Map paymentStatus dropdown values to display labels
+    const statusMap = { confirmed: 'Confirmed', pending: 'Pending', cancelled: 'Cancelled' };
+    let status;
+    if (appointment.paymentStatus && statusMap[appointment.paymentStatus]) {
+        status = statusMap[appointment.paymentStatus];
+    } else {
+        status = appointment.paid >= appointment.fees ? 'Confirmed' :
+            appointment.paid > 0 ? 'Partial' : 'Pending';
+    }
     const newAppointment = {
         ...appointment,
         id: Date.now(),
-        status: appointment.paid >= appointment.fees ? 'Confirmed' :
-            appointment.paid > 0 ? 'Partial' : 'Pending'
+        status
     };
     if (!data.appointments) {
         data.appointments = [];
@@ -227,13 +235,19 @@ export const updateAppointment = (id, updates) => {
     const index = data.appointments.findIndex(a => a.id === id);
     if (index !== -1) {
         const updated = { ...data.appointments[index], ...updates };
-        // Auto-update status based on payment
-        if (updated.paid >= updated.fees) {
-            updated.status = 'Confirmed';
-        } else if (updated.paid > 0) {
-            updated.status = 'Partial';
+        // Map paymentStatus dropdown values to display labels
+        const statusMap = { confirmed: 'Confirmed', pending: 'Pending', cancelled: 'Cancelled' };
+        if (updated.paymentStatus && statusMap[updated.paymentStatus]) {
+            updated.status = statusMap[updated.paymentStatus];
         } else {
-            updated.status = 'Pending';
+            // Auto-update status based on payment
+            if (updated.paid >= updated.fees) {
+                updated.status = 'Confirmed';
+            } else if (updated.paid > 0) {
+                updated.status = 'Partial';
+            } else {
+                updated.status = 'Pending';
+            }
         }
         data.appointments[index] = updated;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));

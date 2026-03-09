@@ -1,41 +1,70 @@
 'use client';
 
-import Link from 'next/link';
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-    getHospitalData,
-    updateOpdHours,
-    updateContact,
-    addService,
-    updateService,
-    deleteService,
-    addDoctor,
-    updateDoctor,
-    deleteDoctor,
-    addAppointment,
-    updateAppointment,
-    deleteAppointment,
-    initializeData
-} from '@/utils/hospitalData';
+import { useLoader } from '@/context/LoaderContext';
 
 export default function AdminDashboard() {
     const router = useRouter();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [activeTab, setActiveTab] = useState('appointments');
-    const [hospitalData, setHospitalData] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [appointments, setAppointments] = useState([]);
+    const [doctors, setDoctors] = useState([]);
+    const [services, setServices] = useState([]);
+    const [settings, setSettings] = useState({
+        opdHours: { weekdays: '', saturday: '', sunday: '' },
+        contact: { phone: '', whatsapp: '', email: '', address: '' }
+    });
     const [editMode, setEditMode] = useState(null);
     const [formData, setFormData] = useState({});
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [fileUploadLoading, setFileUploadLoading] = useState(false);
+    const [fileUploadMsg, setFileUploadMsg] = useState(null);
+    const { showLoader, hideLoader } = useLoader();
+
+    // Helper function to get auth headers
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('authToken');
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+    };
+
+    // Filters for appointments
+    const [appointmentSearch, setAppointmentSearch] = useState('');
+    const [appointmentDateFilter, setAppointmentDateFilter] = useState('');
+
+    const loadData = async () => {
+        setIsLoading(true);
+        showLoader(300); // Show loader with 300ms minimum
+        const headers = getAuthHeaders();
+        try {
+            const [aptsRes, docsRes, svcRes, settingsRes] = await Promise.all([
+                fetch('/api/admin/appointments', { headers: getAuthHeaders() }),
+                fetch('/api/admin/doctors', { headers: getAuthHeaders() }),
+                fetch('/api/admin/services', { headers: getAuthHeaders() }),
+                fetch('/api/admin/settings', { headers: getAuthHeaders() }),
+            ]);
+            const [aptsJson, docsJson, svcJson, settingsJson] = await Promise.all([
+                aptsRes.json(), docsRes.json(), svcRes.json(), settingsRes.json()
+            ]);
+            if (aptsJson.success) setAppointments(aptsJson.data || []);
+            if (docsJson.success) setDoctors(docsJson.data || []);
+            if (svcJson.success) setServices(svcJson.data || []);
+            if (settingsJson.success && settingsJson.data) setSettings(settingsJson.data);
+        } catch (err) {
+            console.error('Load data error:', err);
+        } finally {
+            setIsLoading(false);
+            hideLoader();
+        }
+    };
 
     useEffect(() => {
-        // Check authentication
         const auth = localStorage.getItem('adminAuth');
-        if (auth === 'true') {
+        const token = localStorage.getItem('authToken');
+        if (auth === 'true' && token) {
             setIsAuthenticated(true);
-            // Initialize and load data
-            const data = initializeData();
-            setHospitalData(data);
+            loadData();
         } else {
             router.push('/admin/login');
         }
@@ -43,26 +72,30 @@ export default function AdminDashboard() {
 
     const handleLogout = () => {
         localStorage.removeItem('adminAuth');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userRole');
         router.push('/admin/login');
     };
 
-    const refreshData = () => {
-        const data = getHospitalData();
-        setHospitalData(data);
-    };
-
-    // OPD Hours Management
-    const handleSaveOpdHours = () => {
-        updateOpdHours(formData);
-        refreshData();
+    // OPD Hours & Contact saved to Supabase hospital_settings
+    const handleSaveOpdHours = async () => {
+        await fetch('/api/admin/settings', {
+            method: 'PUT',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'opdHours', value: formData }),
+        });
+        await loadData();
         setEditMode(null);
         alert('OPD Hours updated successfully!');
     };
 
-    // Contact Management
-    const handleSaveContact = () => {
-        updateContact(formData);
-        refreshData();
+    const handleSaveContact = async () => {
+        await fetch('/api/admin/settings', {
+            method: 'PUT',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'contact', value: formData }),
+        });
+        await loadData();
         setEditMode(null);
         alert('Contact information updated successfully!');
     };
@@ -78,25 +111,38 @@ export default function AdminDashboard() {
         setFormData(service);
     };
 
-    const handleSaveService = () => {
+    const handleSaveService = async () => {
         if (editMode === 'add-service') {
-            addService(formData);
+            await fetch('/api/admin/services', {
+                headers: getAuthHeaders(),
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
             alert('Service added successfully!');
         } else {
-            const id = parseInt(editMode.split('-')[2]);
-            updateService(id, formData);
+            const id = editMode.replace('edit-service-', '');
+            await fetch(`/api/admin/services/${id}`, {
+                method: 'PUT',
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
             alert('Service updated successfully!');
         }
-        refreshData();
+        await loadData();
         setEditMode(null);
     };
 
-    const handleDeleteService = (id) => {
-        if (confirm('Are you sure you want to delete this service?')) {
-            deleteService(id);
-            refreshData();
+    const handleDeleteService = async (id) => {
+        const res = await fetch(`/api/admin/services/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+        const result = await res.json();
+        if (result.success) {
             alert('Service deleted successfully!');
+            await loadData();
+        } else {
+            alert(`Error: ${result.error || 'Failed to delete service'}`);
         }
+        setConfirmDeleteId(null);
     };
 
     // Doctor Management
@@ -107,57 +153,97 @@ export default function AdminDashboard() {
             qualifications: [],
             specializations: [],
             image: null,
+            _imageFile: null,
             opdHours: '',
+            fees: 0,
             opdSchedule: {
-                workingDays: [1, 2, 3, 4, 5, 6], // Default: Mon-Sat
+                workingDays: [1, 2, 3, 4, 5, 6],
                 morningSlot: { start: '09:00', end: '14:00' },
-                eveningSlot: { start: '17:00', end: '20:00' }
+                eveningSlot: { start: '17:00', end: '20:00' },
+                eveningSlotEnabled: true
             }
         });
     };
 
     const handleEditDoctor = (doctor) => {
         setEditMode(`edit-doctor-${doctor.id}`);
-        // Ensure opdSchedule exists for legacy data
-        const doctorWithSchedule = {
-            ...doctor,
-            opdSchedule: doctor.opdSchedule || {
-                workingDays: [1, 2, 3, 4, 5, 6], // Mon-Sat default
-                morningSlot: { start: '09:00', end: '14:00' },
-                eveningSlot: { start: '17:00', end: '20:00' }
-            }
+        const schedule = doctor.opd_schedule || {
+            workingDays: [1, 2, 3, 4, 5, 6],
+            morningSlot: { start: '09:00', end: '14:00' },
+            eveningSlot: { start: '17:00', end: '20:00' },
+            eveningSlotEnabled: true
         };
-        setFormData(doctorWithSchedule);
+        // Backward compat: if eveningSlotEnabled is not set, default to true
+        if (schedule.eveningSlotEnabled === undefined) schedule.eveningSlotEnabled = true;
+        setFormData({
+            id: doctor.id,
+            name: doctor.full_name,
+            qualifications: Array.isArray(doctor.qualifications) ? doctor.qualifications : doctor.qualification ? [doctor.qualification] : [],
+            specializations: Array.isArray(doctor.specializations) ? doctor.specializations : doctor.specialization ? [doctor.specialization] : [],
+            image: doctor.image_url || null,
+            _imageFile: null,
+            opdHours: doctor.opd_hours || '',
+            fees: doctor.fees || 0,
+            opdSchedule: schedule
+        });
     };
 
-    const handleSaveDoctor = () => {
+    const handleSaveDoctor = async () => {
+        const fd = new FormData();
+        fd.append('full_name', formData.name || '');
+        fd.append('qualifications', JSON.stringify(formData.qualifications || []));
+        fd.append('specializations', JSON.stringify(formData.specializations || []));
+        fd.append('opd_hours', formData.opdHours || '');
+        fd.append('fees', formData.fees || 0);
+        fd.append('opd_schedule', JSON.stringify(formData.opdSchedule || {}));
+        if (formData._imageFile) fd.append('image', formData._imageFile);
+
+        let res;
         if (editMode === 'add-doctor') {
-            addDoctor(formData);
-            alert('Doctor added successfully!');
+            res = await fetch('/api/admin/doctors', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: fd
+            });
         } else {
-            const id = parseInt(editMode.split('-')[2]);
-            updateDoctor(id, formData);
-            alert('Doctor updated successfully!');
+            const id = editMode.replace('edit-doctor-', '');
+            res = await fetch(`/api/admin/doctors/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: fd
+            });
         }
-        refreshData();
-        setEditMode(null);
+
+        const result = await res.json();
+        if (result.success) {
+            alert(editMode === 'add-doctor' ? 'Doctor added successfully!' : 'Doctor updated successfully!');
+            await loadData();
+            setEditMode(null);
+        } else {
+            alert(`Error: ${result.error || 'Failed to save doctor'}`);
+        }
     };
 
-    const handleDeleteDoctor = (id) => {
-        if (confirm('Are you sure you want to delete this doctor?')) {
-            deleteDoctor(id);
-            refreshData();
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+    const handleDeleteDoctor = async (id) => {
+        const res = await fetch(`/api/admin/doctors/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+        const result = await res.json();
+        if (result.success) {
             alert('Doctor deleted successfully!');
+            await loadData();
+        } else {
+            alert(`Error: ${result.error || 'Failed to delete doctor'}`);
         }
+        setConfirmDeleteId(null);
     };
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
+            setFormData(prev => ({ ...prev, _imageFile: file }));
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData({ ...formData, image: reader.result });
-            };
+            reader.onloadend = () => { setFormData(prev => ({ ...prev, image: reader.result })); };
             reader.readAsDataURL(file);
         }
     };
@@ -166,55 +252,213 @@ export default function AdminDashboard() {
     const handleAddAppointment = () => {
         setEditMode('add-appointment');
         setFormData({
-            patient: '',
-            date: '',
-            time: '',
-            type: '',
+            patient_name: '',
+            appointment_date: '',
+            appointment_time: '',
+            appointment_type: '',
             fees: 0,
-            paid: 0
+            status: 'unpaid'
         });
+        setUploadedFiles([]);
+        setFileUploadMsg(null);
     };
 
-    const handleEditAppointment = (appointment) => {
-        setEditMode(`edit-appointment-${appointment.id}`);
-        setFormData(appointment);
+    // Derive paymentStatus from existing status - keep original value for consistency
+    const derivePaymentStatus = (status) => {
+        // Return the status as-is to maintain consistency between table and edit form
+        const s = (status || '').toLowerCase();
+        // Map old status values to new ones for backward compatibility
+        if (s === 'confirmed') return 'paid';
+        if (s === 'cancelled') return 'rejected';
+        if (s === 'pending') return 'unpaid';
+        // Return original if already one of the new values
+        if (s === 'paid' || s === 'unpaid' || s === 'rejected') return s;
+        return 'unpaid'; // default
     };
 
-    const handleSaveAppointment = () => {
-        if (editMode === 'add-appointment') {
-            addAppointment(formData);
-            alert('Appointment added successfully!');
-        } else {
-            const id = parseInt(editMode.split('-')[2]);
-            updateAppointment(id, formData);
-            alert('Appointment updated successfully!');
+    // Fetch files for an appointment
+    const fetchAppointmentFiles = async (appointmentId) => {
+        try {
+            const res = await fetch(`/api/appointments/${appointmentId}/files`);
+            const json = await res.json();
+            if (json.success) {
+                setUploadedFiles(json.data || []);
+            }
+        } catch (err) {
+            console.error('Error fetching files:', err);
         }
-        refreshData();
+    };
+
+    // Handle file upload
+    const handleFileUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        // Extract appointment ID from editMode
+        const appointmentId = editMode.split('-').pop();
+
+        // Validate file sizes (10MB limit)
+        const MAX_SIZE = 10 * 1024 * 1024;
+        for (const file of files) {
+            if (file.size > MAX_SIZE) {
+                setFileUploadMsg({ type: 'error', text: `File "${file.name}" exceeds 10MB limit.` });
+                e.target.value = '';
+                return;
+            }
+        }
+
+        setFileUploadLoading(true);
+        setFileUploadMsg(null);
+
+        try {
+            for (const file of files) {
+                const fd = new FormData();
+                fd.append('file', file);
+
+                const res = await fetch(`/api/appointments/${appointmentId}/files`, {
+                    method: 'POST',
+                    body: fd,
+                });
+                const json = await res.json();
+                if (!json.success) {
+                    setFileUploadMsg({ type: 'error', text: json.error || 'Upload failed.' });
+                    setFileUploadLoading(false);
+                    e.target.value = '';
+                    return;
+                }
+            }
+            setFileUploadMsg({ type: 'success', text: 'File(s) uploaded successfully!' });
+            await fetchAppointmentFiles(appointmentId);
+        } catch (err) {
+            setFileUploadMsg({ type: 'error', text: 'Upload failed: ' + err.message });
+        }
+        setFileUploadLoading(false);
+        e.target.value = '';
+    };
+
+    // Handle file delete
+    const handleFileDelete = async (filePath, recordId) => {
+        if (!confirm('Delete this file?')) return;
+        const appointmentId = editMode.split('-').pop();
+        try {
+            const res = await fetch(`/api/appointments/${appointmentId}/files`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filePath, recordId }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                await fetchAppointmentFiles(appointmentId);
+            } else {
+                alert(json.error || 'Delete failed.');
+            }
+        } catch (err) {
+            alert('Delete failed: ' + err.message);
+        }
+    };
+
+    const handleEditAppointment = (apt) => {
+        setEditMode(`edit-appointment-${apt.id}`);
+        setFormData({
+            id: apt.id,
+            patient_name: apt.patient_name || '',
+            appointment_date: apt.appointment_date || '',
+            appointment_time: apt.appointment_time || '',
+            appointment_type: apt.appointment_type || '',
+            fees: apt.fees || 0,
+            status: (apt.status || 'unpaid'), // Use actual status value directly
+        });
+        setUploadedFiles([]);
+        setFileUploadMsg(null);
+        fetchAppointmentFiles(apt.id);
+    };
+
+    const handleSaveAppointment = async () => {
         setEditMode(null);
-    };
-
-    const handleDeleteAppointment = (id) => {
-        if (confirm('Are you sure you want to delete this appointment?')) {
-            deleteAppointment(id);
-            refreshData();
-            alert('Appointment deleted successfully!');
+        setUploadedFiles([]);
+        setFileUploadMsg(null);
+        try {
+            const res = await fetch('/api/appointments/admin-save', {
+                method: 'POST',
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert(formData.id ? 'Appointment updated successfully!' : 'Appointment added successfully!');
+                await loadData();
+            } else {
+                alert('Error: ' + (json.error || 'Unknown error'));
+            }
+        } catch (err) {
+            alert('Error saving appointment: ' + err.message);
         }
     };
 
-    if (!isAuthenticated || !hospitalData) {
+    const handleDeleteAppointment = async (id) => {
+        const res = await fetch(`/api/admin/appointments/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+        const result = await res.json();
+        if (result.success) {
+            alert('Appointment deleted successfully!');
+            await loadData();
+        } else {
+            alert(`Error: ${result.error || 'Failed to delete appointment'}`);
+        }
+        setConfirmDeleteId(null);
+    };
+
+    // Handle inline status update for appointments
+    const handleStatusChange = async (appointmentId, newStatus) => {
+        try {
+            const res = await fetch('/api/appointments/admin-save', {
+                method: 'POST',
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: appointmentId,
+                    status: newStatus,
+                }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                // Update local state immediately using functional update to get latest state
+                setAppointments(prevAppointments =>
+                    prevAppointments.map(apt =>
+                        apt.id === appointmentId ? { ...apt, status: newStatus } : apt
+                    )
+                );
+            } else {
+                alert('Error updating status: ' + (json.error || 'Unknown error'));
+            }
+        } catch (err) {
+            alert('Error updating status: ' + err.message);
+        }
+    };
+
+    if (!isAuthenticated || isLoading) {
         return null;
     }
 
-    // Calculate dynamic stats
-    const totalAppointments = hospitalData.appointments?.length || 0;
-    const pendingAppointments = hospitalData.appointments?.filter(a => a.status === 'Pending').length || 0;
-    const confirmedAppointments = hospitalData.appointments?.filter(a => a.status === 'Confirmed').length || 0;
-    const totalRevenue = hospitalData.appointments?.reduce((sum, apt) => sum + (apt.paid || 0), 0) || 0;
+    // Calculate stats based on payment status (paid/unpaid/rejected)
+    const totalAppointments = appointments.length;
+    // Paid appointments count
+    const paidAppointments = appointments.filter(a => {
+        const s = (a.status || '').toLowerCase();
+        return s === 'paid';
+    }).length;
+    // Unpaid appointments count (exclude rejected)
+    const unpaidAppointments = appointments.filter(a => {
+        const s = (a.status || '').toLowerCase();
+        return s === 'unpaid';
+    }).length;
+    // Total revenue - only from paid appointments, using fees field
+    const totalRevenue = appointments
+        .filter(a => (a.status || '').toLowerCase() === 'paid')
+        .reduce((sum, apt) => sum + (apt.fees || 0), 0);
 
     const stats = [
         { label: 'Total Appointments', value: totalAppointments.toString() },
-        { label: 'Confirmed', value: confirmedAppointments.toString() },
-        { label: 'Pending Payment', value: pendingAppointments.toString() },
+        { label: 'Paid', value: paidAppointments.toString() },
+        { label: 'Unpaid', value: unpaidAppointments.toString() },
         { label: 'Total Revenue', value: `₹${totalRevenue.toLocaleString()}` },
     ];
 
@@ -289,6 +533,35 @@ export default function AdminDashboard() {
                                 </button>
                             </div>
 
+                            <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-4)', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <div className="form-group" style={{ margin: 0, flex: 1, minWidth: '200px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Search by patient name..."
+                                        value={appointmentSearch}
+                                        onChange={(e) => setAppointmentSearch(e.target.value)}
+                                        style={{ width: '100%', padding: 'var(--space-2)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-base)' }}
+                                    />
+                                </div>
+                                <div className="form-group" style={{ margin: 0, minWidth: '150px' }}>
+                                    <input
+                                        type="date"
+                                        value={appointmentDateFilter}
+                                        onChange={(e) => setAppointmentDateFilter(e.target.value)}
+                                        style={{ width: '100%', padding: 'var(--space-2)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-base)' }}
+                                    />
+                                </div>
+                                {(appointmentSearch || appointmentDateFilter) && (
+                                    <button
+                                        onClick={() => { setAppointmentSearch(''); setAppointmentDateFilter(''); }}
+                                        className="btn btn-secondary"
+                                        style={{ padding: '8px 16px', height: 'fit-content' }}
+                                    >
+                                        Clear Filters
+                                    </button>
+                                )}
+                            </div>
+
                             {editMode && editMode.includes('appointment') && (
                                 <div style={{ background: 'var(--color-accent-blue)', padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)', marginBottom: 'var(--space-4)' }}>
                                     <h4 className="mb-3">{editMode === 'add-appointment' ? 'Add New Appointment' : 'Edit Appointment'}</h4>
@@ -297,8 +570,8 @@ export default function AdminDashboard() {
                                             <label>Patient Name</label>
                                             <input
                                                 type="text"
-                                                value={formData.patient || ''}
-                                                onChange={(e) => setFormData({ ...formData, patient: e.target.value })}
+                                                value={formData.patient_name || ''}
+                                                onChange={(e) => setFormData({ ...formData, patient_name: e.target.value })}
                                                 placeholder="e.g., John Doe"
                                             />
                                         </div>
@@ -306,24 +579,24 @@ export default function AdminDashboard() {
                                             <label>Date</label>
                                             <input
                                                 type="date"
-                                                value={formData.date || ''}
-                                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                                value={formData.appointment_date || ''}
+                                                onChange={(e) => setFormData({ ...formData, appointment_date: e.target.value })}
                                             />
                                         </div>
                                         <div className="form-group">
                                             <label>Time</label>
                                             <input
                                                 type="time"
-                                                value={formData.time || ''}
-                                                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                                                value={formData.appointment_time || ''}
+                                                onChange={(e) => setFormData({ ...formData, appointment_time: e.target.value })}
                                             />
                                         </div>
                                         <div className="form-group">
                                             <label>Type</label>
                                             <input
                                                 type="text"
-                                                value={formData.type || ''}
-                                                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                                value={formData.appointment_type || ''}
+                                                onChange={(e) => setFormData({ ...formData, appointment_type: e.target.value })}
                                                 placeholder="e.g., Cardiology"
                                             />
                                         </div>
@@ -336,17 +609,74 @@ export default function AdminDashboard() {
                                             />
                                         </div>
                                         <div className="form-group">
-                                            <label>Paid (₹)</label>
-                                            <input
-                                                type="number"
-                                                value={formData.paid || 0}
-                                                onChange={(e) => setFormData({ ...formData, paid: parseInt(e.target.value) || 0 })}
-                                            />
+                                            <label>Payment Status</label>
+                                            <select
+                                                value={formData.status || 'pending'}
+                                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                                style={{ width: '100%', padding: 'var(--space-2)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontFamily: 'var(--font-sans)', fontSize: 'var(--text-base)' }}
+                                            >
+                                                <option value="paid">Paid</option>
+                                                <option value="unpaid">Unpaid</option>
+                                                <option value="rejected">Rejected</option>
+                                            </select>
                                         </div>
                                     </div>
+
+                                    {/* Patient Files Section */}
+                                    {editMode && editMode !== 'add-appointment' && (
+                                        <div style={{ background: 'white', padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)', marginTop: 'var(--space-3)' }}>
+                                            <h4 style={{ marginBottom: 'var(--space-3)', fontSize: 'var(--text-lg)' }}>Patient Files (Reports, Prescriptions, X-rays)</h4>
+                                            <div className="form-group">
+                                                <input
+                                                    type="file"
+                                                    multiple
+                                                    accept=".pdf,.jpg,.jpeg,.png"
+                                                    onChange={handleFileUpload}
+                                                    disabled={fileUploadLoading}
+                                                />
+                                                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginTop: 'var(--space-1)' }}>Accepted: PDF, JPG, PNG. Max 10MB per file.</p>
+                                            </div>
+                                            {fileUploadLoading && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+                                                    <div style={{ width: '18px', height: '18px', border: '2px solid var(--color-teal)', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                                                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-teal)' }}>Uploading...</span>
+                                                </div>
+                                            )}
+                                            {fileUploadMsg && (
+                                                <p style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-sm)', color: fileUploadMsg.type === 'success' ? '#2e7d32' : '#c62828' }}>
+                                                    {fileUploadMsg.text}
+                                                </p>
+                                            )}
+                                            {uploadedFiles.length > 0 && (
+                                                <div style={{ marginTop: 'var(--space-3)' }}>
+                                                    <p style={{ fontWeight: '600', marginBottom: 'var(--space-2)', fontSize: 'var(--text-sm)' }}>Uploaded Files:</p>
+                                                    {uploadedFiles.map((f) => (
+                                                        <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-1)' }}>
+                                                            <span style={{ fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{f.fileName}</span>
+                                                            <div style={{ display: 'flex', gap: 'var(--space-1)', marginLeft: 'var(--space-2)', flexShrink: 0 }}>
+                                                                <a
+                                                                    href={f.signedUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="btn btn-secondary"
+                                                                    style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)', textDecoration: 'none' }}
+                                                                >View</a>
+                                                                <button
+                                                                    onClick={() => handleFileDelete(f.filePath, f.id)}
+                                                                    className="btn btn-secondary"
+                                                                    style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)', color: '#f44336' }}
+                                                                >Delete</button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
                                         <button onClick={handleSaveAppointment} className="btn btn-primary">Save</button>
-                                        <button onClick={() => setEditMode(null)} className="btn btn-secondary">Cancel</button>
+                                        <button onClick={() => { setEditMode(null); setUploadedFiles([]); setFileUploadMsg(null); }} className="btn btn-secondary">Cancel</button>
                                     </div>
                                 </div>
                             )}
@@ -360,50 +690,90 @@ export default function AdminDashboard() {
                                             <th style={{ padding: 'var(--space-3)', textAlign: 'left' }}>Time</th>
                                             <th style={{ padding: 'var(--space-3)', textAlign: 'left' }}>Type</th>
                                             <th style={{ padding: 'var(--space-3)', textAlign: 'left' }}>Fees</th>
-                                            <th style={{ padding: 'var(--space-3)', textAlign: 'left' }}>Paid</th>
                                             <th style={{ padding: 'var(--space-3)', textAlign: 'left' }}>Status</th>
                                             <th style={{ padding: 'var(--space-3)', textAlign: 'left' }}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {(hospitalData.appointments || []).map((apt) => (
-                                            <tr key={apt.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                                                <td style={{ padding: 'var(--space-3)' }}>{apt.patient}</td>
-                                                <td style={{ padding: 'var(--space-3)' }}>{apt.date}</td>
-                                                <td style={{ padding: 'var(--space-3)' }}>{apt.time}</td>
-                                                <td style={{ padding: 'var(--space-3)' }}>{apt.type}</td>
-                                                <td style={{ padding: 'var(--space-3)' }}>₹{apt.fees}</td>
-                                                <td style={{ padding: 'var(--space-3)' }}>₹{apt.paid}</td>
-                                                <td style={{ padding: 'var(--space-3)' }}>
-                                                    <span className="badge" style={{
-                                                        background: apt.status === 'Confirmed' ? '#e8f5e9' :
-                                                            apt.status === 'Partial' ? '#fff3e0' : '#ffebee',
-                                                        color: apt.status === 'Confirmed' ? '#2e7d32' :
-                                                            apt.status === 'Partial' ? '#e65100' : '#c62828'
-                                                    }}>
-                                                        {apt.status}
-                                                    </span>
-                                                </td>
-                                                <td style={{ padding: 'var(--space-3)' }}>
-                                                    <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
-                                                        <button
-                                                            onClick={() => handleEditAppointment(apt)}
-                                                            className="btn btn-secondary"
-                                                            style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)' }}
+                                        {appointments
+                                            .filter(apt => {
+                                                const matchesSearch = apt.patient_name?.toLowerCase().includes(appointmentSearch.toLowerCase()) || false;
+                                                const matchesDate = appointmentDateFilter ? apt.appointment_date === appointmentDateFilter : true;
+                                                return matchesSearch && matchesDate;
+                                            })
+                                            .map((apt) => (
+                                                <tr key={apt.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                                    <td style={{ padding: 'var(--space-3)' }}>{apt.patient_name || ''}</td>
+                                                    <td style={{ padding: 'var(--space-3)' }}>{apt.appointment_date || ''}</td>
+                                                    <td style={{ padding: 'var(--space-3)' }}>{apt.appointment_time || ''}</td>
+                                                    <td style={{ padding: 'var(--space-3)' }}>{apt.appointment_type || ''}</td>
+                                                    <td style={{ padding: 'var(--space-3)' }}>₹{apt.fees || 0}</td>
+                                                    <td style={{ padding: 'var(--space-3)' }}>
+                                                        <select
+                                                            value={apt.status || 'pending'}
+                                                            onChange={(e) => handleStatusChange(apt.id, e.target.value)}
+                                                            style={{
+                                                                padding: '6px 10px',
+                                                                borderRadius: 'var(--radius-md)',
+                                                                border: '1px solid var(--color-border)',
+                                                                fontFamily: 'var(--font-sans)',
+                                                                fontSize: 'var(--text-sm)',
+                                                                background: (apt.status === 'Paid' || apt.status === 'paid' || apt.status === 'Confirmed' || apt.status === 'confirmed') ? '#e8f5e9' :
+                                                                    (apt.status === 'Unpaid' || apt.status === 'unpaid' || apt.status === 'pending' || apt.status === 'Pending') ? '#fff3e0' :
+                                                                        (apt.status === 'Rejected' || apt.status === 'cancelled') ? '#ffebee' : '#fff',
+                                                                color: (apt.status === 'Paid' || apt.status === 'paid' || apt.status === 'Confirmed' || apt.status === 'confirmed') ? '#2e7d32' :
+                                                                    (apt.status === 'Unpaid' || apt.status === 'unpaid' || apt.status === 'pending' || apt.status === 'Pending') ? '#e65100' :
+                                                                        (apt.status === 'Rejected' || apt.status === 'cancelled') ? '#c62828' : '#1a1a2e',
+                                                                cursor: 'pointer',
+                                                                fontWeight: 500,
+                                                                minWidth: '100px'
+                                                            }}
                                                         >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteAppointment(apt.id)}
-                                                            className="btn btn-secondary"
-                                                            style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)', color: '#f44336' }}
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                            <option value="paid">Paid</option>
+                                                            <option value="unpaid">Unpaid</option>
+                                                            <option value="rejected">Rejected</option>
+                                                        </select>
+                                                    </td>
+                                                    <td style={{ padding: 'var(--space-3)' }}>
+                                                        <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
+                                                            <button
+                                                                onClick={() => handleEditAppointment(apt)}
+                                                                className="btn btn-secondary"
+                                                                style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)' }}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            {confirmDeleteId === apt.id ? (
+                                                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                                    <span style={{ fontSize: 'var(--text-sm)', color: '#f44336', fontWeight: 600 }}>Confirm?</span>
+                                                                    <button
+                                                                        onClick={() => handleDeleteAppointment(apt.id)}
+                                                                        className="btn btn-secondary"
+                                                                        style={{ fontSize: 'var(--text-sm)', padding: '2px 10px', background: '#f44336', color: '#fff', border: 'none' }}
+                                                                    >
+                                                                        Yes
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setConfirmDeleteId(null)}
+                                                                        className="btn btn-secondary"
+                                                                        style={{ fontSize: 'var(--text-sm)', padding: '2px 10px' }}
+                                                                    >
+                                                                        No
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => setConfirmDeleteId(apt.id)}
+                                                                    className="btn btn-secondary"
+                                                                    style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)', color: '#f44336' }}
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -449,7 +819,7 @@ export default function AdminDashboard() {
                             )}
 
                             <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-                                {hospitalData.services.map((service) => (
+                                {services.map((service) => (
                                     <div key={service.id} style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                                             <div style={{ flex: 1 }}>
@@ -464,13 +834,33 @@ export default function AdminDashboard() {
                                                 >
                                                     Edit
                                                 </button>
-                                                <button
-                                                    onClick={() => handleDeleteService(service.id)}
-                                                    className="btn btn-secondary"
-                                                    style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)', color: '#f44336' }}
-                                                >
-                                                    Delete
-                                                </button>
+                                                {confirmDeleteId === service.id ? (
+                                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: 'var(--text-sm)', color: '#f44336', fontWeight: 600 }}>Confirm?</span>
+                                                        <button
+                                                            onClick={() => handleDeleteService(service.id)}
+                                                            className="btn btn-secondary"
+                                                            style={{ fontSize: 'var(--text-sm)', padding: '2px 10px', background: '#f44336', color: '#fff', border: 'none' }}
+                                                        >
+                                                            Yes
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setConfirmDeleteId(null)}
+                                                            className="btn btn-secondary"
+                                                            style={{ fontSize: 'var(--text-sm)', padding: '2px 10px' }}
+                                                        >
+                                                            No
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setConfirmDeleteId(service.id)}
+                                                        className="btn btn-secondary"
+                                                        style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)', color: '#f44336' }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -526,6 +916,16 @@ export default function AdminDashboard() {
                                             value={formData.opdHours || ''}
                                             onChange={(e) => setFormData({ ...formData, opdHours: e.target.value })}
                                             placeholder="e.g., Mon-Sat: 9 AM - 2 PM"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Consultation Fees (₹)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.fees || 0}
+                                            onChange={(e) => setFormData({ ...formData, fees: parseInt(e.target.value) || 0 })}
+                                            placeholder="e.g., 500"
+                                            min="0"
                                         />
                                     </div>
 
@@ -612,45 +1012,82 @@ export default function AdminDashboard() {
                                             </div>
                                         </div>
 
-                                        {/* Evening Slot */}
+                                        {/* Evening Slot with Toggle */}
                                         <div className="form-group" style={{ marginTop: 'var(--space-3)' }}>
-                                            <label>Evening Slot</label>
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-                                                <div>
-                                                    <label style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>Start Time</label>
-                                                    <input
-                                                        type="time"
-                                                        value={formData.opdSchedule?.eveningSlot?.start || '17:00'}
-                                                        onChange={(e) => setFormData({
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                                                <label style={{ margin: 0 }}>Evening Slot</label>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', fontSize: 'var(--text-sm)', fontWeight: 500 }}>
+                                                    <span style={{ color: formData.opdSchedule?.eveningSlotEnabled !== false ? '#2e7d32' : 'var(--color-text-secondary)' }}>
+                                                        {formData.opdSchedule?.eveningSlotEnabled !== false ? 'Enabled' : 'Disabled'}
+                                                    </span>
+                                                    <div
+                                                        onClick={() => setFormData({
                                                             ...formData,
                                                             opdSchedule: {
                                                                 ...formData.opdSchedule,
-                                                                eveningSlot: {
-                                                                    ...formData.opdSchedule?.eveningSlot,
-                                                                    start: e.target.value
-                                                                }
+                                                                eveningSlotEnabled: formData.opdSchedule?.eveningSlotEnabled === false ? true : false
                                                             }
                                                         })}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>End Time</label>
-                                                    <input
-                                                        type="time"
-                                                        value={formData.opdSchedule?.eveningSlot?.end || '20:00'}
-                                                        onChange={(e) => setFormData({
-                                                            ...formData,
-                                                            opdSchedule: {
-                                                                ...formData.opdSchedule,
-                                                                eveningSlot: {
-                                                                    ...formData.opdSchedule?.eveningSlot,
-                                                                    end: e.target.value
-                                                                }
-                                                            }
-                                                        })}
-                                                    />
-                                                </div>
+                                                        style={{
+                                                            width: '44px', height: '24px',
+                                                            borderRadius: '12px',
+                                                            background: formData.opdSchedule?.eveningSlotEnabled !== false ? 'var(--color-teal)' : '#cbd5e1',
+                                                            position: 'relative',
+                                                            cursor: 'pointer',
+                                                            transition: 'background 0.2s ease'
+                                                        }}
+                                                    >
+                                                        <div style={{
+                                                            width: '20px', height: '20px',
+                                                            borderRadius: '50%',
+                                                            background: '#fff',
+                                                            position: 'absolute',
+                                                            top: '2px',
+                                                            left: formData.opdSchedule?.eveningSlotEnabled !== false ? '22px' : '2px',
+                                                            transition: 'left 0.2s ease',
+                                                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                                                        }} />
+                                                    </div>
+                                                </label>
                                             </div>
+                                            {formData.opdSchedule?.eveningSlotEnabled !== false && (
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+                                                    <div>
+                                                        <label style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>Start Time</label>
+                                                        <input
+                                                            type="time"
+                                                            value={formData.opdSchedule?.eveningSlot?.start || '17:00'}
+                                                            onChange={(e) => setFormData({
+                                                                ...formData,
+                                                                opdSchedule: {
+                                                                    ...formData.opdSchedule,
+                                                                    eveningSlot: {
+                                                                        ...formData.opdSchedule?.eveningSlot,
+                                                                        start: e.target.value
+                                                                    }
+                                                                }
+                                                            })}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>End Time</label>
+                                                        <input
+                                                            type="time"
+                                                            value={formData.opdSchedule?.eveningSlot?.end || '20:00'}
+                                                            onChange={(e) => setFormData({
+                                                                ...formData,
+                                                                opdSchedule: {
+                                                                    ...formData.opdSchedule,
+                                                                    eveningSlot: {
+                                                                        ...formData.opdSchedule?.eveningSlot,
+                                                                        end: e.target.value
+                                                                    }
+                                                                }
+                                                            })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -675,24 +1112,27 @@ export default function AdminDashboard() {
                             )}
 
                             <div style={{ display: 'grid', gap: 'var(--space-4)' }}>
-                                {hospitalData.doctors.map((doctor) => (
+                                {doctors.map((doctor) => (
                                     <div key={doctor.id} style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
                                         <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'start' }}>
-                                            {doctor.image && (
+                                            {doctor.image_url && (
                                                 <div style={{ width: '100px', height: '100px', borderRadius: 'var(--radius-lg)', overflow: 'hidden', flexShrink: 0 }}>
-                                                    <img src={doctor.image} alt={doctor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <img src={doctor.image_url} alt={doctor.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 </div>
                                             )}
                                             <div style={{ flex: 1 }}>
-                                                <h4>{doctor.name}</h4>
+                                                <h4>{doctor.full_name}</h4>
                                                 <p className="text-secondary" style={{ marginTop: 'var(--space-1)' }}>
-                                                    {doctor.qualifications.join(', ')}
+                                                    {(Array.isArray(doctor.qualifications) ? doctor.qualifications : [doctor.qualification]).filter(Boolean).join(', ')}
                                                 </p>
                                                 <p className="text-secondary" style={{ marginTop: 'var(--space-1)' }}>
-                                                    <strong>Specializations:</strong> {doctor.specializations.join(', ')}
+                                                    <strong>Specializations:</strong> {(Array.isArray(doctor.specializations) ? doctor.specializations : [doctor.specialization]).filter(Boolean).join(', ')}
                                                 </p>
                                                 <p className="text-secondary" style={{ marginTop: 'var(--space-1)' }}>
-                                                    <strong>OPD Hours:</strong> {doctor.opdHours}
+                                                    <strong>OPD Hours:</strong> {doctor.opd_hours}
+                                                </p>
+                                                <p className="text-secondary" style={{ marginTop: 'var(--space-1)' }}>
+                                                    <strong>Fees:</strong> ₹{doctor.fees || 0}
                                                 </p>
                                             </div>
                                             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -703,13 +1143,33 @@ export default function AdminDashboard() {
                                                 >
                                                     Edit
                                                 </button>
-                                                <button
-                                                    onClick={() => handleDeleteDoctor(doctor.id)}
-                                                    className="btn btn-secondary"
-                                                    style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)', color: '#f44336' }}
-                                                >
-                                                    Delete
-                                                </button>
+                                                {confirmDeleteId === doctor.id ? (
+                                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: 'var(--text-sm)', color: '#f44336', fontWeight: 600 }}>Confirm?</span>
+                                                        <button
+                                                            onClick={() => handleDeleteDoctor(doctor.id)}
+                                                            className="btn btn-secondary"
+                                                            style={{ fontSize: 'var(--text-sm)', padding: '2px 10px', background: '#f44336', color: '#fff', border: 'none' }}
+                                                        >
+                                                            Yes
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setConfirmDeleteId(null)}
+                                                            className="btn btn-secondary"
+                                                            style={{ fontSize: 'var(--text-sm)', padding: '2px 10px' }}
+                                                        >
+                                                            No
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setConfirmDeleteId(doctor.id)}
+                                                        className="btn btn-secondary"
+                                                        style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)', color: '#f44336' }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -731,7 +1191,7 @@ export default function AdminDashboard() {
                                             <button
                                                 onClick={() => {
                                                     setEditMode('opd-hours');
-                                                    setFormData(hospitalData.opdHours);
+                                                    setFormData(settings.opdHours || {});
                                                 }}
                                                 className="btn btn-secondary"
                                             >
@@ -772,9 +1232,9 @@ export default function AdminDashboard() {
                                         </div>
                                     ) : (
                                         <div className="text-secondary">
-                                            <p>{hospitalData.opdHours.weekdays}</p>
-                                            <p>{hospitalData.opdHours.saturday}</p>
-                                            <p>{hospitalData.opdHours.sunday}</p>
+                                            <p>{settings.opdHours?.weekdays}</p>
+                                            <p>{settings.opdHours?.saturday}</p>
+                                            <p>{settings.opdHours?.sunday}</p>
                                         </div>
                                     )}
                                 </div>
@@ -787,7 +1247,7 @@ export default function AdminDashboard() {
                                             <button
                                                 onClick={() => {
                                                     setEditMode('contact');
-                                                    setFormData(hospitalData.contact);
+                                                    setFormData(settings.contact || {});
                                                 }}
                                                 className="btn btn-secondary"
                                             >
@@ -836,10 +1296,10 @@ export default function AdminDashboard() {
                                         </div>
                                     ) : (
                                         <div className="text-secondary">
-                                            <p><strong>Phone:</strong> {hospitalData.contact.phone}</p>
-                                            <p><strong>WhatsApp:</strong> {hospitalData.contact.whatsapp}</p>
-                                            <p><strong>Email:</strong> {hospitalData.contact.email}</p>
-                                            <p><strong>Address:</strong> {hospitalData.contact.address}</p>
+                                            <p><strong>Phone:</strong> {settings.contact?.phone}</p>
+                                            <p><strong>WhatsApp:</strong> {settings.contact?.whatsapp}</p>
+                                            <p><strong>Email:</strong> {settings.contact?.email}</p>
+                                            <p><strong>Address:</strong> {settings.contact?.address}</p>
                                         </div>
                                     )}
                                 </div>

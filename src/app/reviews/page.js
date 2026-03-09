@@ -1,6 +1,17 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useLoader } from '@/context/LoaderContext';
 
 export default function Reviews() {
+    const { hideLoader } = useLoader();
+
+    // Hide loader after component mounts
+    useEffect(() => {
+        hideLoader();
+    }, [hideLoader]);
+
     const reviews = [
         {
             id: 1,

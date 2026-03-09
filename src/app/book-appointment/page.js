@@ -2,16 +2,18 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { addAppointment, initializeData, getAppointments } from '@/utils/hospitalData';
 import { jsPDF } from 'jspdf';
+import { useLoader } from '@/context/LoaderContext';
 
 export default function BookAppointment() {
-    const [hospitalData, setHospitalData] = useState(null);
+    const [doctors, setDoctors] = useState([]);
+    const [doctorsLoaded, setDoctorsLoaded] = useState(false);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
     const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
     const [bookingDetails, setBookingDetails] = useState(null);
     const [existingAppointments, setExistingAppointments] = useState([]);
     const timeoutRef = useRef(null);
+    const { showLoader, hideLoader } = useLoader();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -26,12 +28,52 @@ export default function BookAppointment() {
 
     const [submitted, setSubmitted] = useState(false);
 
+    // Fetch doctors from Supabase API
     useEffect(() => {
-        const data = initializeData();
-        setHospitalData(data);
-        const appointments = getAppointments();
-        setExistingAppointments(appointments);
-    }, []);
+        const fetchDoctors = async () => {
+            showLoader(300); // Show loader with 300ms minimum
+            try {
+                const res = await fetch('/api/doctors');
+                const json = await res.json();
+                if (json.success && json.data) {
+                    // Map Supabase fields to the format the booking page expects
+                    const mapped = json.data.map(d => ({
+                        id: d.id,
+                        name: d.full_name,
+                        qualifications: Array.isArray(d.qualifications) ? d.qualifications : (d.qualification ? [d.qualification] : []),
+                        specializations: Array.isArray(d.specializations) ? d.specializations : (d.specialization ? [d.specialization] : []),
+                        opdHours: d.opd_hours || '',
+                        opdSchedule: d.opd_schedule || null,
+                        fees: d.fees || 0,
+                        image: d.image_url || null
+                    }));
+                    setDoctors(mapped);
+                }
+            } catch (err) {
+                console.error('Failed to fetch doctors:', err);
+            } finally {
+                setDoctorsLoaded(true);
+            }
+        };
+
+        const fetchAppointments = async () => {
+            try {
+                const res = await fetch('/api/appointments/available');
+                const json = await res.json();
+                if (json.success && json.data) {
+                    setExistingAppointments(json.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch appointments:', err);
+            } finally {
+                // Hide loader after both requests complete
+                hideLoader();
+            }
+        };
+
+        fetchDoctors();
+        fetchAppointments();
+    }, [showLoader, hideLoader]);
 
     const formatTime = (time24) => {
         const [hours, minutes] = time24.split(':');
@@ -42,17 +84,23 @@ export default function BookAppointment() {
     };
 
     const isTimeSlotBooked = (timeSlot, date, doctorId) => {
-        return existingAppointments.some(apt =>
-            apt.date === date &&
-            apt.time === timeSlot
+        // timeSlot is in 24-hour format (e.g., "09:00")
+        // Existing appointments have appointment_time in the same 24-hour format
+        // Since doctor_id is not being saved due to FK constraint, check all appointments for the date/time
+        const result = existingAppointments.some(apt =>
+            apt.appointment_date === date &&
+            apt.appointment_time === timeSlot &&
+            apt.status !== 'cancelled' &&
+            apt.status !== 'rejected'
         );
+        return result;
     };
 
     const generateTimeSlots = (opdSchedule, selectedDate) => {
         if (!opdSchedule) return [];
 
         const slots = [];
-        const { morningSlot, eveningSlot } = opdSchedule;
+        const { morningSlot, eveningSlot, eveningSlotEnabled } = opdSchedule;
 
         if (morningSlot && morningSlot.start && morningSlot.end) {
             const [startHour, startMin] = morningSlot.start.split(':').map(Number);
@@ -64,16 +112,16 @@ export default function BookAppointment() {
             while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
                 const time24 = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
                 const formattedTime = formatTime(time24);
-                const isBooked = selectedDate ? isTimeSlotBooked(formattedTime, selectedDate, formData.doctor) : false;
+                const isBooked = selectedDate ? isTimeSlotBooked(time24, selectedDate, formData.doctor) : false;
 
                 slots.push({
-                    value: formattedTime,
+                    value: time24,
                     label: `${formattedTime} (Morning)`,
                     period: 'Morning',
                     disabled: isBooked
                 });
 
-                currentMin += 30;
+                currentMin += 10;
                 if (currentMin >= 60) {
                     currentMin = 0;
                     currentHour++;
@@ -81,7 +129,9 @@ export default function BookAppointment() {
             }
         }
 
-        if (eveningSlot && eveningSlot.start && eveningSlot.end) {
+        // Only show evening slots if eveningSlotEnabled is true (default true for backward compat)
+        const isEveningEnabled = eveningSlotEnabled !== false;
+        if (isEveningEnabled && eveningSlot && eveningSlot.start && eveningSlot.end) {
             const [startHour, startMin] = eveningSlot.start.split(':').map(Number);
             const [endHour, endMin] = eveningSlot.end.split(':').map(Number);
 
@@ -91,16 +141,16 @@ export default function BookAppointment() {
             while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
                 const time24 = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
                 const formattedTime = formatTime(time24);
-                const isBooked = selectedDate ? isTimeSlotBooked(formattedTime, selectedDate, formData.doctor) : false;
+                const isBooked = selectedDate ? isTimeSlotBooked(time24, selectedDate, formData.doctor) : false;
 
                 slots.push({
-                    value: formattedTime,
+                    value: time24,
                     label: `${formattedTime} (Evening)`,
                     period: 'Evening',
                     disabled: isBooked
                 });
 
-                currentMin += 30;
+                currentMin += 10;
                 if (currentMin >= 60) {
                     currentMin = 0;
                     currentHour++;
@@ -137,10 +187,17 @@ export default function BookAppointment() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        const getLocalYYYYMMDD = (d) => {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
         for (let i = 0; i < 90; i++) {
             const date = new Date(today);
             date.setDate(today.getDate() + i);
-            const dateString = date.toISOString().split('T')[0];
+            const dateString = getLocalYYYYMMDD(date);
             const dayOfWeek = date.getDay();
 
             if (schedule.workingDays.includes(dayOfWeek)) {
@@ -161,10 +218,10 @@ export default function BookAppointment() {
     };
 
     const handleDoctorChange = (doctorId) => {
-        const doctor = hospitalData?.doctors.find(d => d.id === parseInt(doctorId));
+        const doctor = doctors.find(d => d.id === doctorId);
         console.log('Selected doctor:', doctor);
         console.log('Doctor schedule:', doctor?.opdSchedule);
-        setSelectedDoctor(doctor);
+        setSelectedDoctor(doctor || null);
         setFormData({ ...formData, doctor: doctorId, timeSlot: '', date: '' });
         setAvailableTimeSlots([]);
     };
@@ -184,7 +241,7 @@ export default function BookAppointment() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!isDateAvailable(formData.date)) {
@@ -197,15 +254,44 @@ export default function BookAppointment() {
             return;
         }
 
-        addAppointment({
-            patient: formData.name,
-            date: formData.date,
-            time: formData.timeSlot,
-            type: formData.reason || 'General Consultation',
-            fees: 300,
-            paid: 0,
-            doctorId: formData.doctor
-        });
+        // addAppointment({
+        //     patient: formData.name,
+        //     date: formData.date,
+        //     time: formData.timeSlot,
+        //     type: formData.reason || 'General Consultation',
+        //     fees: selectedDoctor?.fees || 0,
+        //     paid: 0,
+        //     doctorId: formData.doctor
+        // });
+
+        // Also save to Supabase so admin dashboard can see it
+        try {
+            const response = await fetch('/api/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    appointment_date: formData.date,
+                    appointment_time: formData.timeSlot,
+                    patient_name: formData.name,
+                    mobile_number: formData.mobile,
+                    gender: formData.gender,
+                    doctor_id: formData.doctor,
+                    appointment_type: formData.reason || 'General Consultation',
+                    notes: formData.reason || '',
+                    fees: selectedDoctor?.fees || 0,
+                    status: 'pending',
+                }),
+            });
+
+            const result = await response.json();
+            console.log('Appointment save result:', result);
+
+            if (!result.success) {
+                console.error('Failed to save appointment:', result.error);
+            }
+        } catch (err) {
+            console.error('Failed to save appointment to database:', err);
+        }
 
         setBookingDetails({
             name: formData.name,
@@ -217,9 +303,10 @@ export default function BookAppointment() {
                 month: 'long',
                 day: 'numeric'
             }),
-            time: formData.timeSlot,
+            time: formatTime(formData.timeSlot),
             type: formData.visitType,
-            reason: formData.reason || 'General Consultation'
+            reason: formData.reason || 'General Consultation',
+            fees: selectedDoctor?.fees || 0
         });
 
         setSubmitted(true);
@@ -249,9 +336,15 @@ export default function BookAppointment() {
             reason: '',
         });
         setSelectedDoctor(null);
-        setAvailableTimeSlots([]);
-        const appointments = getAppointments();
-        setExistingAppointments(appointments);
+        // Refresh appointments from the server so newly booked ones show up
+        const fetchAppointments = async () => {
+            try {
+                const res = await fetch('/api/appointments/available');
+                const json = await res.json();
+                if (json.success && json.data) setExistingAppointments(json.data);
+            } catch (err) { }
+        };
+        fetchAppointments();
     };
 
     const generateReceiptHTML = () => {
@@ -301,7 +394,7 @@ export default function BookAppointment() {
                         <div class="row"><span class="label">Time:</span><span class="value">${bookingDetails.time}</span></div>
                         <div class="row"><span class="label">Visit Type:</span><span class="value">${bookingDetails.type}</span></div>
                         <div class="row"><span class="label">Reason:</span><span class="value">${bookingDetails.reason}</span></div>
-                        <div class="row fee"><span class="label">Consultation Fee:</span><span class="value">₹300</span></div>
+                        <div class="row fee"><span class="label">Consultation Fee:</span><span class="value">₹${bookingDetails.fees}</span></div>
                     </div>
                     <div class="footer">
                         <p><strong>Note:</strong> Please arrive 10 minutes before your scheduled time.</p>
@@ -415,7 +508,7 @@ export default function BookAppointment() {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(20, 184, 166);
         doc.setFontSize(14);
-        doc.text('Rs. 300', pageWidth - margin, y, { align: 'right' });
+        doc.text(`Rs. ${bookingDetails.fees}`, pageWidth - margin, y, { align: 'right' });
         y += 12;
 
         // Footer note
@@ -435,8 +528,9 @@ export default function BookAppointment() {
         doc.save(fileName);
     };
 
-    if (!hospitalData) {
-        return <div>Loading...</div>;
+    if (!doctorsLoaded) {
+        // Return null to let the full-screen loader show
+        return null;
     }
 
     const getDayName = (dayNumber) => {
@@ -503,7 +597,7 @@ export default function BookAppointment() {
                                 </div>
                                 <div className="detail-row" style={{ marginTop: 'var(--space-3)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--color-border)' }}>
                                     <span className="detail-label">Consultation Fee:</span>
-                                    <span className="detail-value" style={{ fontWeight: '600', color: 'var(--color-teal)' }}>₹300</span>
+                                    <span className="detail-value" style={{ fontWeight: '600', color: 'var(--color-teal)' }}>₹{bookingDetails.fees}</span>
                                 </div>
                             </div>
 
@@ -595,9 +689,9 @@ export default function BookAppointment() {
                                             required
                                         >
                                             <option value="">Choose a doctor</option>
-                                            {hospitalData.doctors.map((doctor) => (
+                                            {doctors.map((doctor) => (
                                                 <option key={doctor.id} value={doctor.id}>
-                                                    {doctor.name} - {doctor.specializations.join(', ')}
+                                                    {doctor.name} - {(doctor.specializations || []).join(', ')}
                                                 </option>
                                             ))}
                                         </select>
@@ -607,12 +701,20 @@ export default function BookAppointment() {
                                             <p className="text-secondary" style={{ fontSize: 'var(--text-sm)', margin: 0, marginBottom: 'var(--space-1)' }}>
                                                 <strong>Available Days:</strong> {selectedDoctor.opdSchedule ? selectedDoctor.opdSchedule.workingDays.map(day => getDayName(day)).join(', ') : 'Mon-Sat'}
                                             </p>
-                                            <p className="text-secondary" style={{ fontSize: 'var(--text-sm)', margin: 0 }}>
+                                            <p className="text-secondary" style={{ fontSize: 'var(--text-sm)', margin: 0, marginBottom: 'var(--space-1)' }}>
                                                 <strong>OPD Hours:</strong> {
-                                                    selectedDoctor.opdSchedule ?
-                                                        `${formatTime(selectedDoctor.opdSchedule.morningSlot?.start || '09:00')} - ${formatTime(selectedDoctor.opdSchedule.morningSlot?.end || '14:00')}, ${formatTime(selectedDoctor.opdSchedule.eveningSlot?.start || '17:00')} - ${formatTime(selectedDoctor.opdSchedule.eveningSlot?.end || '20:00')}`
-                                                        : selectedDoctor.opdHours || '9 AM - 2 PM, 5 PM - 8 PM'
+                                                    selectedDoctor.opdSchedule ? (
+                                                        <>
+                                                            {formatTime(selectedDoctor.opdSchedule.morningSlot?.start || '09:00')} - {formatTime(selectedDoctor.opdSchedule.morningSlot?.end || '14:00')}
+                                                            {selectedDoctor.opdSchedule.eveningSlotEnabled !== false && (
+                                                                `, ${formatTime(selectedDoctor.opdSchedule.eveningSlot?.start || '17:00')} - ${formatTime(selectedDoctor.opdSchedule.eveningSlot?.end || '20:00')}`
+                                                            )}
+                                                        </>
+                                                    ) : selectedDoctor.opdHours || '9 AM - 2 PM, 5 PM - 8 PM'
                                                 }
+                                            </p>
+                                            <p className="text-secondary" style={{ fontSize: 'var(--text-sm)', margin: 0 }}>
+                                                <strong>Consultation Fees:</strong> ₹{selectedDoctor.fees || 0}
                                             </p>
                                         </div>
                                     )}

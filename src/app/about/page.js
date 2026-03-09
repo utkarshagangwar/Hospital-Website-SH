@@ -1,6 +1,31 @@
+'use client';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useLoader } from '@/context/LoaderContext';
 
 export default function About() {
+    const [contact, setContact] = useState({
+        phone: '9044952554',
+        whatsapp: '9044952554',
+        email: 'shivajiheartcare@gmail.com',
+        address: '1/16, Awas Vikas, Farrukhabad, Uttar Pradesh, India'
+    });
+    const { hideLoader } = useLoader();
+
+    useEffect(() => {
+        fetch('/api/admin/settings')
+            .then(res => res.json())
+            .then(json => {
+                if (json.success && json.data && json.data.contact) {
+                    setContact({ ...contact, ...json.data.contact });
+                }
+            })
+            .catch(console.error)
+            .finally(() => {
+                hideLoader();
+            });
+    }, []);
+
     return (
         <div className="page-wrapper">
 
@@ -50,9 +75,10 @@ export default function About() {
                     <div className="card">
                         <h2>Location</h2>
                         <p className="text-secondary">
-                            <strong>Address:</strong> 1/16, Awas Vikas, Farrukhabad, Uttar Pradesh, India<br />
-                            <strong>Phone:</strong> 9044952554<br />
-                            <strong>Email:</strong> shivajiheartcare@gmail.com
+                            <strong>Address:</strong> {contact.address}<br />
+                            <strong>Phone:</strong> <a href={`tel:${contact.phone}`} style={{ textDecoration: 'none', color: 'inherit' }}>{contact.phone}</a><br />
+                            <strong>WhatsApp:</strong> <a href={`https://wa.me/91${contact.whatsapp}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>{contact.whatsapp}</a><br />
+                            <strong>Email:</strong> <a href={`mailto:${contact.email}`} style={{ textDecoration: 'none', color: 'inherit' }}>{contact.email}</a>
                         </p>
                     </div>
                 </div>

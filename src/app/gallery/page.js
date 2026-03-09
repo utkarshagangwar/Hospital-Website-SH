@@ -1,6 +1,17 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useLoader } from '@/context/LoaderContext';
 
 export default function Gallery() {
+    const { hideLoader } = useLoader();
+
+    // Hide loader after component mounts (no data to fetch)
+    useEffect(() => {
+        hideLoader();
+    }, [hideLoader]);
+
     const placeholderImages = [
         { id: 1, title: 'Hospital Reception', category: 'Facilities' },
         { id: 2, title: 'Consultation Room', category: 'Facilities' },

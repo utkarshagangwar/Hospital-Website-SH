@@ -2,21 +2,47 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { getHospitalData, initializeData } from '@/utils/hospitalData';
+import { useLoader } from '@/context/LoaderContext';
+
+const DEFAULT_CONTACT = {
+    phone: '9044952554',
+    whatsapp: '9044952554',
+    email: 'shivajiheartcare@gmail.com',
+    address: '1/16, Awas Vikas, Farrukhabad, Uttar Pradesh'
+};
+
+const DEFAULT_OPD = {
+    weekdays: 'Monday - Friday: 9:00 AM - 2:00 PM, 5:00 PM - 8:00 PM',
+    saturday: 'Saturday: 9:00 AM - 2:00 PM, 5:00 PM - 8:00 PM',
+    sunday: 'Sunday: Closed'
+};
 
 export default function Contact() {
-    const [hospitalData, setHospitalData] = useState(null);
+    const [contact, setContact] = useState(DEFAULT_CONTACT);
+    const [opdHours, setOpdHours] = useState(DEFAULT_OPD);
+    const [loading, setLoading] = useState(true);
+    const { hideLoader } = useLoader();
 
     useEffect(() => {
-        const data = initializeData();
-        setHospitalData(data);
-    }, []);
+        fetch('/api/admin/settings')
+            .then(res => res.json())
+            .then(json => {
+                if (json.success && json.data) {
+                    if (json.data.contact) setContact(json.data.contact);
+                    if (json.data.opdHours) setOpdHours(json.data.opdHours);
+                }
+            })
+            .catch(() => {/* keep defaults */ })
+            .finally(() => {
+                setLoading(false);
+                hideLoader();
+            });
+    }, [hideLoader]);
 
-    if (!hospitalData) {
-        return <div>Loading...</div>;
+    if (loading) {
+        // Return null to let the full-screen loader show
+        return null;
     }
-
-    const { contact, opdHours } = hospitalData;
 
     return (
         <div className="page-wrapper">
@@ -55,7 +81,7 @@ export default function Contact() {
                             </div>
                             <h3 className="mb-2">Phone</h3>
                             <p className="text-secondary mb-3">
-                                Reception & Appointments<br />
+                                Reception &amp; Appointments<br />
                                 <strong>{contact.phone}</strong>
                             </p>
                             <a href={`tel:${contact.phone}`} className="btn btn-secondary" style={{ display: 'inline-flex' }}>
@@ -71,7 +97,7 @@ export default function Contact() {
                             </div>
                             <h3 className="mb-2">WhatsApp</h3>
                             <p className="text-secondary mb-3">
-                                Quick support & appointments<br />
+                                Quick support &amp; appointments<br />
                                 <strong>{contact.whatsapp}</strong>
                             </p>
                             <a

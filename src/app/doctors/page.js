@@ -3,21 +3,46 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { getHospitalData, initializeData } from '@/utils/hospitalData';
+import { useLoader } from '@/context/LoaderContext';
 
 export default function Doctors() {
-    const [hospitalData, setHospitalData] = useState(null);
+    const [doctors, setDoctors] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const { showLoader, hideLoader } = useLoader();
 
     useEffect(() => {
-        const data = initializeData();
-        setHospitalData(data);
-    }, []);
+        const fetchDoctors = async () => {
+            showLoader(300); // Show loader with 300ms minimum
+            try {
+                const res = await fetch('/api/doctors');
+                const json = await res.json();
+                if (json.success && json.data) {
+                    // Map Supabase fields to the format the UI expects
+                    const mapped = json.data.map(d => ({
+                        id: d.id,
+                        name: d.full_name,
+                        qualifications: Array.isArray(d.qualifications) ? d.qualifications : (d.qualification ? d.qualification.split(',').map(q => q.trim()) : []),
+                        specializations: Array.isArray(d.specializations) ? d.specializations : (d.specialization ? [d.specialization] : []),
+                        image: d.image_url || '/images/doctor.png',
+                        opdHours: d.opd_hours || 'Mon-Sat: 9 AM - 2 PM, 5 PM - 8 PM'
+                    }));
+                    setDoctors(mapped);
+                }
+            } catch (err) {
+                console.error('Failed to fetch doctors:', err);
+            } finally {
+                setLoading(false);
+                hideLoader();
+            }
+        };
 
-    if (!hospitalData) {
-        return <div>Loading...</div>;
+        fetchDoctors();
+    }, [showLoader, hideLoader]);
+
+    if (loading || doctors.length === 0) {
+        // Return null to let the full-screen loader show
+        return null;
     }
-
-    const { doctors } = hospitalData;
 
     return (
         <div className="page-wrapper">
