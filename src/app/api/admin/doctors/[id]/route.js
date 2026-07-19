@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
 import { uploadDoctorImage } from '@/utils/storage';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 import { logAction } from '@/utils/auditLog';
 
 // PUT: Update doctor by ID (admin only)
 export async function PUT(request, { params }) {
     // Check authentication and authorization - admin only for updating doctors
-    const { user, response: authError } = await requireRole(request, ['admin']);
+    const { user, response: authError } = await requirePermission(request, 'doctors_manage');
 
     if (authError) {
         return authError;
@@ -93,7 +93,7 @@ export async function PUT(request, { params }) {
 // DELETE: Remove doctor by ID (admin only)
 export async function DELETE(request, { params }) {
     // Check authentication and authorization - admin only for deleting doctors
-    const { user, response: authError } = await requireRole(request, ['admin']);
+    const { user, response: authError } = await requirePermission(request, 'doctors_manage');
 
     if (authError) {
         return authError;

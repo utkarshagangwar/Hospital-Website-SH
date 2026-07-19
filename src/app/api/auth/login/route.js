@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimitMiddleware } from '@/utils/rateLimit';
+import { getEffectivePermissions } from '@/utils/roles';
+import { supabaseAdmin } from '@/utils/supabaseAdmin';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -48,12 +50,25 @@ export async function POST(request) {
             );
         }
 
-        // Get user's role from profiles
-        const { data: profile } = await supabase
+        // Get user's role from profiles — via the service-role client so this
+        // never depends on RLS/session propagation (same client every other
+        // role lookup in the app uses, e.g. getUserRole in utils/auth.js).
+        const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('role, full_name')
             .eq('id', data.user.id)
             .single();
+
+        if (profileError) {
+            console.error('login: failed to load profile role:', profileError);
+        }
+
+        // Effective permissions: admin gets all; custom per-user grants
+        // (set by admin, stored in app_metadata) override role defaults
+        const permissions = getEffectivePermissions(
+            profile?.role || null,
+            data.user.app_metadata?.permissions
+        );
 
         return NextResponse.json({
             success: true,
@@ -62,7 +77,8 @@ export async function POST(request) {
                     id: data.user.id,
                     email: data.user.email,
                     role: profile?.role || null,
-                    full_name: profile?.full_name || null
+                    full_name: profile?.full_name || null,
+                    permissions
                 },
                 session: {
                     access_token: data.session.access_token,

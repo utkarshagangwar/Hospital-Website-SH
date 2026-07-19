@@ -24,7 +24,8 @@ export default function Doctors() {
                         qualifications: Array.isArray(d.qualifications) ? d.qualifications : (d.qualification ? d.qualification.split(',').map(q => q.trim()) : []),
                         specializations: Array.isArray(d.specializations) ? d.specializations : (d.specialization ? [d.specialization] : []),
                         image: d.image_url || '/images/doctor.png',
-                        opdHours: d.opd_hours || 'Mon-Sat: 9 AM - 2 PM, 5 PM - 8 PM'
+                        opdHours: d.opd_hours || 'Mon-Sat: 9 AM - 2 PM, 5 PM - 8 PM',
+                        fees: d.fees || 0,
                     }));
                     setDoctors(mapped);
                 }
@@ -55,7 +56,7 @@ export default function Doctors() {
                     <div style={{ display: 'grid', gap: 'var(--space-8)' }}>
                         {doctors.map((doctor) => (
                             <div key={doctor.id} className="card">
-                                <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 'var(--space-6)', alignItems: 'center' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 'var(--space-16)', alignItems: 'center' }}>
                                     <div className="doctor-image-container">
                                         <div className="doctor-avatar-img">
                                             <Image
@@ -78,7 +79,10 @@ export default function Doctors() {
 
                                         <div className="mb-3">
                                             <h4 style={{ marginBottom: 'var(--space-2)' }}>Specializations</h4>
-                                            <ul style={{ paddingLeft: 'var(--space-4)' }}>
+                                            <ul style={{
+                                                paddingLeft: 'var(--space-4)',
+                                                listStyleType: 'disc'
+                                            }}>
                                                 {doctor.specializations.map((spec, index) => (
                                                     <li key={index} className="text-secondary">{spec}</li>
                                                 ))}
@@ -88,6 +92,11 @@ export default function Doctors() {
                                         <div className="mb-3">
                                             <h4 style={{ marginBottom: 'var(--space-1)' }}>OPD Hours</h4>
                                             <p className="text-secondary">{doctor.opdHours}</p>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <h4 style={{ marginBottom: 'var(--space-1)' }}>Consultation Fees</h4>
+                                            <p className="text-secondary">₹{doctor.fees}</p>
                                         </div>
 
                                         <Link href="/book-appointment" className="btn btn-primary">

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
 import { logAction } from '@/utils/auditLog';
 import { uploadDoctorImage, deleteDoctorImage } from '@/utils/storage';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 
 // GET: Fetch all doctors (public, used by /doctors page)
 export async function GET(request) {
@@ -41,7 +41,7 @@ export async function GET(request) {
 // POST: Add a new doctor (admin only)
 export async function POST(request) {
   // Check authentication and authorization in one call (avoids double auth check)
-  const { user, response: authError } = await requireRole(request, ['admin']);
+  const { user, response: authError } = await requirePermission(request, 'doctors_manage');
 
   if (authError) {
     return authError;

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './admin-login.css';
 import { useLoader } from '@/context/LoaderContext';
+import { ShieldCheck, Mail, Lock, Eye, EyeOff, LogIn } from '@/components/icons';
 
 export default function AdminLogin() {
     const router = useRouter();
@@ -16,10 +17,24 @@ export default function AdminLogin() {
     const [showPassword, setShowPassword] = useState(false);
     const { hideLoader, showLoader } = useLoader();
 
-    // Hide loader after component mounts
+    // If there's already a valid session (same 24h check the dashboard
+    // enforces), skip the form entirely instead of making the user re-enter
+    // credentials for a session that's still active.
     useEffect(() => {
+        const auth = localStorage.getItem('adminAuth');
+        const token = localStorage.getItem('authToken');
+        const sessionExpiresAt = parseInt(localStorage.getItem('sessionExpiresAt') || '0', 10);
+        const hasValidSession = auth === 'true' && !!token && !!sessionExpiresAt && Date.now() < sessionExpiresAt;
+
+        if (hasValidSession) {
+            showLoader(300);
+            router.replace('/admin/dashboard');
+            return;
+        }
+
         hideLoader();
-    }, [hideLoader]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -38,7 +53,18 @@ export default function AdminLogin() {
                 // Store auth data in localStorage
                 localStorage.setItem('adminAuth', 'true');
                 localStorage.setItem('authToken', data.data.session.access_token);
+                localStorage.setItem('refreshToken', data.data.session.refresh_token);
+                localStorage.setItem('tokenExpiresAt', data.data.session.expires_at);
+                // Absolute session lifetime — 24h from this login, independent of
+                // how often the short-lived access token itself gets silently
+                // refreshed. The dashboard checks this on every load and forces
+                // re-login once it passes, so browsing never gets cut short by
+                // an access-token refresh cycle, but also never runs forever.
+                localStorage.setItem('sessionExpiresAt', String(Date.now() + 24 * 60 * 60 * 1000));
                 localStorage.setItem('userRole', data.data.user.role);
+                localStorage.setItem('userId', data.data.user.id);
+                localStorage.setItem('userName', data.data.user.full_name || '');
+                localStorage.setItem('userPermissions', JSON.stringify(data.data.user.permissions || []));
                 router.push('/admin/dashboard');
             } else {
                 setError(data.error || 'Invalid email or password');
@@ -66,7 +92,7 @@ export default function AdminLogin() {
                 <div className="admin-brand-panel">
                     <div className="admin-brand-logo">
                         <div className="admin-brand-icon">
-                            <span className="material-icons-outlined">health_and_safety</span>
+                            <ShieldCheck size={26} />
                         </div>
                         <h1 className="admin-brand-title">
                             Shivaji <span className="admin-brand-title-accent">Hospital</span>
@@ -92,7 +118,7 @@ export default function AdminLogin() {
                     </div>
 
                     <div className="admin-brand-badge">
-                        <span className="material-icons-outlined">verified_user</span>
+                        <ShieldCheck size={20} />
                         <span>ISO 27001 Certified Infrastructure</span>
                     </div>
                 </div>
@@ -103,7 +129,7 @@ export default function AdminLogin() {
                     {/* Mobile-only logo */}
                     <div className="admin-mobile-logo">
                         <div className="admin-mobile-logo-icon">
-                            <span className="material-icons-outlined">health_and_safety</span>
+                            <ShieldCheck size={20} />
                         </div>
                         <span className="admin-mobile-logo-title">Shivaji Hospital Admin</span>
                     </div>
@@ -132,7 +158,7 @@ export default function AdminLogin() {
                                 Admin Email ID
                             </label>
                             <div className="admin-input-wrapper">
-                                <span className="material-icons-outlined admin-input-icon">badge</span>
+                                <Mail size={18} className="admin-input-icon" />
                                 <input
                                     className="admin-input"
                                     type="email"
@@ -157,7 +183,7 @@ export default function AdminLogin() {
                                 </a>
                             </div>
                             <div className="admin-input-wrapper">
-                                <span className="material-icons-outlined admin-input-icon">lock</span>
+                                <Lock size={18} className="admin-input-icon" />
                                 <input
                                     className="admin-input"
                                     type={showPassword ? 'text' : 'password'}
@@ -175,32 +201,19 @@ export default function AdminLogin() {
                                     onClick={() => setShowPassword(!showPassword)}
                                     aria-label="Toggle password visibility"
                                 >
-                                    <span className="material-icons-outlined">
-                                        {showPassword ? 'visibility_off' : 'visibility'}
-                                    </span>
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Trust checkbox */}
-                        <div className="admin-checkbox-row">
-                            <input type="checkbox" id="remember" />
-                            <label htmlFor="remember">Trust this workstation for 24 hours</label>
-                        </div>
-
                         {/* Submit */}
                         <button type="submit" className="admin-submit-btn">
-                            <span className="material-icons-outlined">login</span>
+                            <LogIn size={18} />
                             Login
                         </button>
                     </form>
                 </div>
             </div>
-
-            {/* Footer */}
-            <footer className="admin-page-footer">
-                © 2025 Shivaji Hospital. All rights reserved.
-            </footer>
         </div>
     );
 }

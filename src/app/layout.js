@@ -2,6 +2,7 @@ import "./globals.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Loader from "../components/Loader";
+import PageTransition from "../components/PageTransition";
 import { LoaderProvider } from "../context/LoaderContext";
 import FloatingBookButton from "../components/FloatingBookButton";
 import { Analytics } from '@vercel/analytics/next';
@@ -18,17 +19,13 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
-      </head>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body suppressHydrationWarning>
         <LoaderProvider>
           <Loader />
           <Analytics />
           <Header />
-          {children}
+          <PageTransition>{children}</PageTransition>
           <Footer />
 
           {/* Global Floating Book Button */}

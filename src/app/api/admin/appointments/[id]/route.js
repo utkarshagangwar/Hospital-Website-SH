@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 import { logAction } from '@/utils/auditLog';
 
 // DELETE: Hard-delete an appointment by Supabase UUID (admin only)
 export async function DELETE(request, { params }) {
     // Check authentication and authorization - admin only for hard deletes
-    const { user, response: authError } = await requireRole(request, ['admin']);
+    const { user, response: authError } = await requirePermission(request, 'appointments_manage');
 
     if (authError) {
         return authError;

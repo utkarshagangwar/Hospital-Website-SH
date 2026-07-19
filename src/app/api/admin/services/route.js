@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 
 const isTableMissing = (err) =>
     err?.message?.includes('schema cache') ||
@@ -10,7 +10,7 @@ const isTableMissing = (err) =>
 // GET: All services (admin, doctor, receptionist only)
 export async function GET(request) {
     // Check authentication and authorization
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+    const { user, response: authError } = await requirePermission(request, 'appointments_view');
 
     if (authError) {
         return authError;
@@ -38,7 +38,7 @@ export async function GET(request) {
 // POST: Add a new service (admin only)
 export async function POST(request) {
     // Check authentication and authorization - admin only for creating services
-    const { user, response: authError } = await requireRole(request, ['admin']);
+    const { user, response: authError } = await requirePermission(request, 'services_manage');
 
     if (authError) {
         return authError;

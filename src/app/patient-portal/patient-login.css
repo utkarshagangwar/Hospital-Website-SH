@@ -1,5 +1,5 @@
 /* ====================================================
-   Patient Portal Login – Futuristic Split-Screen Design
+   Patient Portal Login — Split-Screen, Ember & Verdant
    ==================================================== */
 
 /* ── Wrapper ── */
@@ -7,7 +7,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f8fafd;
+    background: var(--color-ground);
     position: relative;
 }
 
@@ -51,10 +51,10 @@
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
-    border-radius: 1.5rem;
+    border-radius: var(--radius-2xl);
     overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-    border: 8px solid #fff;
+    box-shadow: var(--shadow-xl);
+    border: 8px solid var(--color-surface);
 }
 
 .patient-brand-image-wrapper img {
@@ -66,7 +66,7 @@
 .patient-brand-image-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.4) 0%, transparent 100%);
+    background: linear-gradient(135deg, rgba(30, 23, 18, 0.55) 0%, rgba(30, 23, 18, 0) 100%);
     z-index: 1;
 }
 
@@ -77,26 +77,27 @@
     left: 1.5rem;
     right: 1.5rem;
     z-index: 2;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(8px);
     padding: 1.5rem;
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .patient-brand-caption-eyebrow {
-    color: #0ea5e9;
+    color: var(--color-ember-deep);
     font-weight: 700;
     font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     margin-bottom: 0.5rem;
 }
 
 .patient-brand-caption-title {
+    font-family: var(--font-display);
     font-size: 1.5rem;
-    font-weight: 800;
-    color: #0f172a;
+    font-weight: 600;
+    color: var(--color-ink);
     line-height: 1.25;
     margin: 0;
 }
@@ -110,24 +111,20 @@
 
 .patient-feature-badge {
     padding: 1rem;
-    border-radius: 1rem;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    border: 1px solid #f1f5f9;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-}
-
-.patient-feature-badge .material-symbols-outlined {
-    color: #0ea5e9;
-    font-size: 1.5rem;
+    color: var(--color-ember-deep);
 }
 
 .patient-feature-badge p {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #334155;
+    color: var(--color-muted);
     margin: 0;
 }
 
@@ -141,11 +138,11 @@
 }
 
 .patient-form-card {
-    background: #fff;
+    background: var(--color-surface);
     padding: 2rem 2.5rem;
-    border-radius: 2rem;
-    box-shadow: 0 20px 40px rgba(14, 165, 233, 0.05);
-    border: 1px solid #f1f5f9;
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border);
 }
 
 /* Mobile logo (visible < lg) */
@@ -165,22 +162,19 @@
 .patient-mobile-logo-icon {
     width: 2rem;
     height: 2rem;
-    background: #0ea5e9;
-    border-radius: 0.5rem;
+    background: var(--color-ember);
+    color: var(--color-ink);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.patient-mobile-logo-icon .material-symbols-outlined {
-    color: #fff;
-    font-size: 1.25rem;
-}
-
 .patient-mobile-logo-title {
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-weight: 600;
     font-size: 1.1rem;
-    color: #0f172a;
+    color: var(--color-ink);
 }
 
 /* Header */
@@ -196,15 +190,16 @@
 }
 
 .patient-form-title {
+    font-family: var(--font-display);
     font-size: 1.875rem;
-    font-weight: 900;
-    color: #0f172a;
+    font-weight: 600;
+    color: var(--color-ink);
     letter-spacing: -0.015em;
     margin: 0 0 0.5rem;
 }
 
 .patient-form-subtitle {
-    color: #64748b;
+    color: var(--color-muted);
     font-weight: 500;
     margin: 0;
     font-size: 0.95rem;
@@ -226,7 +221,7 @@
 .patient-field-label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #334155;
+    color: var(--color-ink);
     margin-bottom: 0.5rem;
     padding-left: 0.25rem;
 }
@@ -234,100 +229,53 @@
 /* Input wrappers */
 .patient-input-wrapper {
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
-.patient-input-wrapper .material-symbols-outlined.patient-input-icon {
+.patient-input-wrapper .patient-input-icon {
     position: absolute;
     left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-    font-size: 1.25rem;
-    transition: color 0.2s ease;
+    color: var(--color-muted-2);
+    transition: color var(--transition-fast);
     pointer-events: none;
 }
 
 .patient-input-wrapper:focus-within .patient-input-icon {
-    color: #0ea5e9;
+    color: var(--color-ember);
 }
 
 .patient-input {
     width: 100%;
     padding: 1rem 1rem 1rem 3rem;
-    background: #f8fafc;
+    background: var(--color-ground);
     border: none;
-    border-radius: 1rem;
-    box-shadow: inset 0 0 0 1px #e2e8f0;
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 0 0 1px var(--color-border);
     font-size: 0.95rem;
-    color: #0f172a;
-    transition: all 0.2s ease;
+    color: var(--color-ink);
+    transition: all var(--transition-fast);
     outline: none;
     font-family: inherit;
 }
 
 .patient-input:focus {
-    box-shadow: inset 0 0 0 2px #0ea5e9;
-    background: #fff;
+    box-shadow: inset 0 0 0 2px var(--color-ember);
+    background: var(--color-surface);
 }
 
 .patient-input::placeholder {
-    color: #94a3b8;
-}
-
-/* Send OTP button */
-.patient-send-otp-btn {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.25rem;
-    margin-top: 0.75rem;
-    background: none;
-    border: none;
-    color: #0ea5e9;
-    font-weight: 700;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    font-family: inherit;
-    padding: 0;
-}
-
-.patient-send-otp-btn:hover {
-    color: rgba(14, 165, 233, 0.8);
-}
-
-.patient-send-otp-btn .material-symbols-outlined {
-    font-size: 0.875rem;
-}
-
-/* OTP toggle button inside input */
-.patient-otp-toggle {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s ease;
-}
-
-.patient-otp-toggle:hover {
-    color: #0ea5e9;
+    color: var(--color-muted-2);
 }
 
 /* Submit button */
 .patient-submit-btn {
     width: 100%;
     padding: 1rem;
-    background: #0ea5e9;
-    color: #fff;
+    background: var(--color-ember);
+    color: var(--color-ink);
     border: none;
-    border-radius: 1rem;
+    border-radius: var(--radius-lg);
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
@@ -335,21 +283,23 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    box-shadow: 0 10px 25px rgba(14, 165, 233, 0.25);
-    transition: all 0.25s ease;
+    box-shadow: var(--shadow-glow);
+    transition: all var(--transition-normal);
     font-family: inherit;
 }
 
 .patient-submit-btn:hover {
-    background: rgba(14, 165, 233, 0.9);
+    background: var(--color-ember-deep);
+    color: white;
     transform: translateY(-1px);
+    box-shadow: var(--shadow-glow-hover);
 }
 
-.patient-submit-btn .material-symbols-outlined {
-    transition: transform 0.25s ease;
+.patient-submit-btn svg {
+    transition: transform var(--transition-fast);
 }
 
-.patient-submit-btn:hover .material-symbols-outlined {
+.patient-submit-btn:hover svg {
     transform: translateX(4px);
 }
 
@@ -360,14 +310,14 @@
 }
 
 .patient-form-footer p {
-    color: #64748b;
+    color: var(--color-muted);
     font-weight: 500;
     font-size: 0.875rem;
     margin: 0;
 }
 
 .patient-form-footer a {
-    color: #0ea5e9;
+    color: var(--color-ember-deep);
     font-weight: 700;
     text-decoration: none;
     margin-left: 0.25rem;
@@ -381,7 +331,7 @@
 .patient-change-link {
     background: none;
     border: none;
-    color: #0ea5e9;
+    color: var(--color-ember-deep);
     cursor: pointer;
     font-weight: 600;
     text-decoration: underline;
@@ -393,7 +343,7 @@
 
 /* OTP sent info */
 .patient-otp-info {
-    color: #64748b;
+    color: var(--color-muted);
     font-size: 0.875rem;
     margin: 0 0 1rem;
 }
@@ -409,45 +359,46 @@
 }
 
 .patient-welcome-card {
-    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
-    color: #fff;
+    background: linear-gradient(135deg, var(--color-ink), #33281E);
+    color: #FBF7F0;
     padding: 1.5rem 2rem;
-    border-radius: 1rem;
+    border-radius: var(--radius-lg);
     margin-bottom: 1.5rem;
 }
 
 .patient-welcome-card h2 {
     margin: 0 0 0.25rem;
-    font-weight: 800;
+    font-weight: 600;
     font-size: 1.5rem;
+    color: #FBF7F0;
 }
 
 .patient-welcome-card p {
     margin: 0;
-    opacity: 0.85;
+    color: #F2934F;
     font-size: 0.9rem;
 }
 
 .patient-section-card {
-    background: #fff;
-    border-radius: 1rem;
-    border: 1px solid #f1f5f9;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
     padding: 1.5rem;
     margin-bottom: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow-sm);
 }
 
 .patient-section-card h3 {
     margin: 0 0 1rem;
-    font-weight: 700;
+    font-weight: 600;
     font-size: 1.1rem;
-    color: #0f172a;
+    color: var(--color-ink);
 }
 
 .patient-appointment-item {
     padding: 0.75rem 1rem;
-    background: #f0f9ff;
-    border-radius: 0.5rem;
+    background: var(--color-ember-tint);
+    border-radius: var(--radius-md);
     margin-bottom: 0.5rem;
 }
 
@@ -459,42 +410,38 @@
 }
 
 .patient-appointment-header strong {
-    color: #0f172a;
+    color: var(--color-ink);
 }
 
 .patient-appointment-header .badge {
-    background: #dcfce7;
-    color: #166534;
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    background: var(--color-success-tint);
+    color: var(--color-success);
 }
 
 .patient-appointment-detail {
-    color: #64748b;
+    color: var(--color-muted);
     font-size: 0.8rem;
     margin: 0;
 }
 
 .patient-prescription-item {
     padding: 0.75rem 1rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
 }
 
 .patient-prescription-item strong {
-    color: #0f172a;
+    color: var(--color-ink);
 }
 
 .patient-prescription-detail {
-    color: #64748b;
+    color: var(--color-muted);
     font-size: 0.8rem;
     margin: 0;
 }
 
 .patient-coming-soon {
-    color: #94a3b8;
+    color: var(--color-muted-2);
     font-size: 0.8rem;
     margin: 0.75rem 0 0;
 }
@@ -505,20 +452,21 @@
 }
 
 .patient-logout-btn {
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    color: #475569;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    color: var(--color-muted);
     padding: 0.6rem 1.5rem;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-md);
     font-weight: 600;
     font-size: 0.875rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
     font-family: inherit;
 }
 
 .patient-logout-btn:hover {
-    background: #e2e8f0;
+    background: var(--color-border);
+    color: var(--color-ink);
 }
 
 .patient-book-btn {
@@ -526,17 +474,17 @@
     width: 100%;
     text-align: center;
     padding: 0.75rem 1rem;
-    background: #f0f9ff;
-    color: #0ea5e9;
-    border: 1px solid #bae6fd;
-    border-radius: 0.75rem;
+    background: var(--color-ember-tint);
+    color: var(--color-ember-deep);
+    border: 1px solid rgba(232, 112, 58, 0.25);
+    border-radius: var(--radius-md);
     font-weight: 600;
     font-size: 0.875rem;
     text-decoration: none;
     margin-top: 0.75rem;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
 }
 
 .patient-book-btn:hover {
-    background: #e0f2fe;
+    background: rgba(232, 112, 58, 0.16);
 }

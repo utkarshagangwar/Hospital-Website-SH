@@ -134,6 +134,50 @@ export async function requireAuth(request) {
 }
 
 /**
+ * Returns 403 unless the user's EFFECTIVE permissions include `permission`.
+ *
+ * Effective permissions = admin gets everything; otherwise the custom
+ * per-user list the admin stored in Supabase app_metadata (which only the
+ * service role can write — users cannot edit their own app_metadata),
+ * falling back to the role's defaults.
+ *
+ * @param {Request} request - The Next.js request object
+ * @param {string} permission - A permission id from utils/roles.js PERMISSIONS
+ * @returns {Promise<{user: object|null, role: string|null, response: NextResponse|null}>}
+ */
+export async function requirePermission(request, permission) {
+    const { user } = await getCurrentUser(request);
+
+    if (!user) {
+        return {
+            user: null,
+            role: null,
+            response: NextResponse.json(
+                { success: false, error: 'Authentication required' },
+                { status: 401 }
+            )
+        };
+    }
+
+    const role = await getUserRole(user.id);
+    const { getEffectivePermissions } = await import('./roles');
+    const effective = getEffectivePermissions(role, user.app_metadata?.permissions);
+
+    if (!effective.includes(permission)) {
+        return {
+            user: null,
+            role,
+            response: NextResponse.json(
+                { success: false, error: 'Insufficient permissions' },
+                { status: 403 }
+            )
+        };
+    }
+
+    return { user, role, response: null };
+}
+
+/**
  * Returns 403 if user's role is not in allowedRoles array
  * @param {Request} request - The Next.js request object
  * @param {string[]} allowedRoles - Array of allowed roles (e.g., ['admin', 'doctor'])

@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
 import { logAction } from '@/utils/auditLog';
-import { requireRole, getCurrentUser } from '@/utils/auth';
+import { getCurrentUser, requirePermission } from '@/utils/auth';
+import { rateLimitMiddleware } from '@/utils/rateLimit';
 
 // GET: Fetch all appointments (staff only)
 export async function GET(request) {
     // Check authentication and authorization in one call (avoids double auth check)
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+    const { user, response: authError } = await requirePermission(request, 'appointments_view');
 
     if (authError) {
         return authError;
@@ -61,6 +62,12 @@ export async function GET(request) {
 
 // POST: Create a new appointment (public for booking, staff for management)
 export async function POST(request) {
+    // Public endpoint — rate limit to stop automated booking spam
+    const { allowed, response: rateLimitResponse, headers } = rateLimitMiddleware(request, 5, 60000);
+    if (!allowed) {
+        return NextResponse.json(rateLimitResponse, { status: 429, headers });
+    }
+
     try {
         // Check if user is authenticated (optional - for staff bookings)
         // Use getCurrentUser directly since auth is optional here
@@ -143,7 +150,7 @@ export async function POST(request) {
                 appointment_date,
                 appointment_time,
                 notes,
-                status: 'pending',
+                status: 'unpaid',
                 patient_name,
                 mobile_number,
                 gender,

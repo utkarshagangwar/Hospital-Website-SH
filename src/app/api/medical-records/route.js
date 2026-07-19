@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
 import { logAction } from '@/utils/auditLog';
 import { uploadMedicalFile, getMedicalFileUrl } from '@/utils/storage';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 
 // GET: Fetch records by patient_id (staff/doctor only)
 export async function GET(request) {
     // Check authentication and authorization in one call (avoids double auth check)
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor']);
+    const { user, response: authError } = await requirePermission(request, 'medical_files');
 
     if (authError) {
         return authError;
@@ -58,7 +58,7 @@ export async function GET(request) {
 // POST: Create a new medical record (doctor only, with optional file upload)
 export async function POST(request) {
     // Check authentication and authorization in one call (avoids double auth check)
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor']);
+    const { user, response: authError } = await requirePermission(request, 'medical_files');
 
     if (authError) {
         return authError;

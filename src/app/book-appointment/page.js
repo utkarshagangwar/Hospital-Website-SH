@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import { useLoader } from '@/context/LoaderContext';
+import { Printer, Download, ClipboardList } from '@/components/icons';
+import CustomSelect from '@/components/CustomSelect';
 
 export default function BookAppointment() {
     const [doctors, setDoctors] = useState([]);
@@ -244,6 +246,21 @@ export default function BookAppointment() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (!formData.doctor) {
+            alert('Please select a doctor.');
+            return;
+        }
+
+        if (!formData.date) {
+            alert('Please select a preferred date.');
+            return;
+        }
+
+        if (!formData.timeSlot) {
+            alert('Please select a preferred time slot.');
+            return;
+        }
+
         if (!isDateAvailable(formData.date)) {
             alert('Doctor is not available on the selected date. Please choose another date.');
             return;
@@ -356,21 +373,21 @@ export default function BookAppointment() {
                 <title>Appointment Receipt - Shivaji Hospital</title>
                 <style>
                     * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1a1a2e; background: #fff; }
-                    .receipt { max-width: 500px; margin: 0 auto; border: 2px solid #14b8a6; border-radius: 16px; padding: 32px; }
-                    .header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #14b8a6; padding-bottom: 20px; }
-                    .header h1 { color: #14b8a6; font-size: 22px; margin-bottom: 4px; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1E1712; background: #fff; }
+                    .receipt { max-width: 500px; margin: 0 auto; border: 2px solid #B8551F; border-radius: 16px; padding: 32px; }
+                    .header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #B8551F; padding-bottom: 20px; }
+                    .header h1 { color: #B8551F; font-size: 22px; margin-bottom: 4px; }
                     .header p { color: #666; font-size: 13px; }
                     .success-title { text-align: center; margin-bottom: 20px; }
-                    .success-title h2 { color: #14b8a6; font-size: 18px; }
+                    .success-title h2 { color: #2A5240; font-size: 18px; }
                     .details { margin-bottom: 20px; }
-                    .details h3 { font-size: 16px; margin-bottom: 12px; color: #1a1a2e; }
+                    .details h3 { font-size: 16px; margin-bottom: 12px; color: #1E1712; }
                     .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
                     .row:last-child { border-bottom: none; }
                     .label { color: #666; font-weight: 500; }
-                    .value { color: #1a1a2e; font-weight: 600; text-align: right; }
+                    .value { color: #1E1712; font-weight: 600; text-align: right; }
                     .fee { margin-top: 12px; padding-top: 12px; border-top: 2px solid #e5e7eb; }
-                    .fee .value { color: #14b8a6; font-size: 18px; }
+                    .fee .value { color: #B8551F; font-size: 18px; }
                     .footer { text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
                     .footer p { color: #666; font-size: 12px; margin-bottom: 4px; }
                     @media print { body { padding: 20px; } .receipt { border: 1px solid #ccc; } }
@@ -425,14 +442,14 @@ export default function BookAppointment() {
         let y = 25;
 
         // Border
-        doc.setDrawColor(20, 184, 166);
+        doc.setDrawColor(184, 85, 31);
         doc.setLineWidth(0.8);
         doc.roundedRect(margin - 5, 15, contentWidth + 10, 175, 4, 4, 'S');
 
         // Header
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(20);
-        doc.setTextColor(20, 184, 166);
+        doc.setTextColor(184, 85, 31);
         doc.text('Shivaji Hospital', pageWidth / 2, y, { align: 'center' });
         y += 7;
         doc.setFont('helvetica', 'normal');
@@ -440,7 +457,7 @@ export default function BookAppointment() {
         doc.setTextColor(100, 100, 100);
         doc.text('Appointment Receipt', pageWidth / 2, y, { align: 'center' });
         y += 5;
-        doc.setDrawColor(20, 184, 166);
+        doc.setDrawColor(184, 85, 31);
         doc.setLineWidth(0.5);
         doc.line(margin, y, pageWidth - margin, y);
         y += 10;
@@ -449,7 +466,7 @@ export default function BookAppointment() {
         const circleX = pageWidth / 2 - 30;
         const circleY = y - 1;
         const circleR = 4;
-        doc.setFillColor(20, 184, 166);
+        doc.setFillColor(42, 82, 64);
         doc.circle(circleX, circleY, circleR, 'F');
         // Draw checkmark inside the circle
         doc.setDrawColor(255, 255, 255);
@@ -459,14 +476,14 @@ export default function BookAppointment() {
         // Text next to checkmark
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
-        doc.setTextColor(20, 184, 166);
+        doc.setTextColor(42, 82, 64);
         doc.text('Appointment Confirmed', circleX + circleR + 3, y);
         y += 12;
 
         // Booking Details header
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(13);
-        doc.setTextColor(26, 26, 46);
+        doc.setTextColor(30, 23, 18);
         doc.text('Booking Details', margin, y);
         y += 8;
 
@@ -487,7 +504,7 @@ export default function BookAppointment() {
             doc.setTextColor(100, 100, 100);
             doc.text(label + ':', margin, y);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(26, 26, 46);
+            doc.setTextColor(30, 23, 18);
             doc.text(value || '-', pageWidth - margin, y, { align: 'right' });
             y += 3;
             doc.setDrawColor(229, 231, 235);
@@ -506,7 +523,7 @@ export default function BookAppointment() {
         doc.setFontSize(12);
         doc.text('Consultation Fee:', margin, y);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(20, 184, 166);
+        doc.setTextColor(184, 85, 31);
         doc.setFontSize(14);
         doc.text(`Rs. ${bookingDetails.fees}`, pageWidth - margin, y, { align: 'right' });
         y += 12;
@@ -555,7 +572,7 @@ export default function BookAppointment() {
                         <div className="success-card card" style={{ marginBottom: 'var(--space-6)' }}>
                             <div style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>
                                 <div className="success-icon">✓</div>
-                                <h2 style={{ color: 'var(--color-teal)', marginBottom: 'var(--space-2)' }}>
+                                <h2 style={{ color: 'var(--color-verdant-deep)', marginBottom: 'var(--space-2)' }}>
                                     Appointment Booked Successfully!
                                 </h2>
                                 <p className="text-secondary">
@@ -610,13 +627,13 @@ export default function BookAppointment() {
 
                             <div className="receipt-actions">
                                 <button type="button" className="btn-receipt btn-print" onClick={handlePrintReceipt}>
-                                    <span className="btn-receipt-icon">🖨️</span> Print Receipt
+                                    <Printer size={17} /> Print Receipt
                                 </button>
                                 <button type="button" className="btn-receipt btn-download" onClick={handleDownloadReceipt}>
-                                    <span className="btn-receipt-icon">📥</span> Download Receipt
+                                    <Download size={17} /> Download Receipt
                                 </button>
                                 <button type="button" className="btn-receipt btn-close-confirm" onClick={handleCloseConfirmation}>
-                                    <span className="btn-receipt-icon">📋</span> Book Another
+                                    <ClipboardList size={17} /> Book Another
                                 </button>
                             </div>
                         </div>
@@ -657,45 +674,45 @@ export default function BookAppointment() {
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label htmlFor="gender">Gender</label>
-                                        <div className="custom-select">
-                                            <select id="gender" name="gender" value={formData.gender} onChange={handleChange}>
-                                                <option value="">Select Gender</option>
-                                                <option value="Male">Male</option>
-                                                <option value="Female">Female</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                        </div>
+                                        <CustomSelect
+                                            id="gender"
+                                            value={formData.gender}
+                                            onChange={(v) => setFormData({ ...formData, gender: v })}
+                                            placeholder="Select Gender"
+                                            options={[
+                                                { value: 'Male', label: 'Male' },
+                                                { value: 'Female', label: 'Female' },
+                                                { value: 'Other', label: 'Other' },
+                                            ]}
+                                        />
                                     </div>
 
                                     <div className="form-group">
                                         <label htmlFor="visitType">Visit Type *</label>
-                                        <div className="custom-select">
-                                            <select id="visitType" name="visitType" value={formData.visitType} onChange={handleChange} required>
-                                                <option value="New">New Patient</option>
-                                                <option value="Follow-up">Follow-up</option>
-                                            </select>
-                                        </div>
+                                        <CustomSelect
+                                            id="visitType"
+                                            value={formData.visitType}
+                                            onChange={(v) => setFormData({ ...formData, visitType: v })}
+                                            options={[
+                                                { value: 'New', label: 'New Patient' },
+                                                { value: 'Follow-up', label: 'Follow-up' },
+                                            ]}
+                                        />
                                     </div>
                                 </div>
 
                                 <div className="form-group">
                                     <label htmlFor="doctor">Select Doctor *</label>
-                                    <div className="custom-select">
-                                        <select
-                                            id="doctor"
-                                            name="doctor"
-                                            value={formData.doctor}
-                                            onChange={(e) => handleDoctorChange(e.target.value)}
-                                            required
-                                        >
-                                            <option value="">Choose a doctor</option>
-                                            {doctors.map((doctor) => (
-                                                <option key={doctor.id} value={doctor.id}>
-                                                    {doctor.name} - {(doctor.specializations || []).join(', ')}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <CustomSelect
+                                        id="doctor"
+                                        value={formData.doctor}
+                                        onChange={handleDoctorChange}
+                                        placeholder="Choose a doctor"
+                                        options={doctors.map((doctor) => ({
+                                            value: doctor.id,
+                                            label: `${doctor.name} - ${(doctor.specializations || []).join(', ')}`,
+                                        }))}
+                                    />
                                     {selectedDoctor && (
                                         <div style={{ marginTop: 'var(--space-2)', padding: 'var(--space-2)', background: 'var(--color-accent-blue)', borderRadius: 'var(--radius-lg)' }}>
                                             <p className="text-secondary" style={{ fontSize: 'var(--text-sm)', margin: 0, marginBottom: 'var(--space-1)' }}>
@@ -723,23 +740,17 @@ export default function BookAppointment() {
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label htmlFor="date">Preferred Date *</label>
-                                        <div className="custom-select">
-                                            <select
-                                                id="date"
-                                                name="date"
-                                                value={formData.date}
-                                                onChange={(e) => handleDateChange(e.target.value)}
-                                                disabled={!selectedDoctor || availableDates.length === 0}
-                                                required
-                                            >
-                                                <option value="">Select a date</option>
-                                                {availableDates.map((date) => (
-                                                    <option key={date.value} value={date.value}>
-                                                        {date.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                        <CustomSelect
+                                            id="date"
+                                            value={formData.date}
+                                            onChange={handleDateChange}
+                                            placeholder="Select a date"
+                                            disabled={!selectedDoctor || availableDates.length === 0}
+                                            options={availableDates.map((date) => ({
+                                                value: date.value,
+                                                label: date.label,
+                                            }))}
+                                        />
                                         {!selectedDoctor && (
                                             <p className="text-secondary" style={{ fontSize: 'var(--text-sm)', marginTop: 'var(--space-1)' }}>
                                                 Please select a doctor first
@@ -749,34 +760,25 @@ export default function BookAppointment() {
 
                                     <div className="form-group">
                                         <label htmlFor="timeSlot">Preferred Time Slot *</label>
-                                        <div className="custom-select">
-                                            <select
-                                                id="timeSlot"
-                                                name="timeSlot"
-                                                value={formData.timeSlot}
-                                                onChange={handleChange}
-                                                disabled={!formData.date || availableTimeSlots.length === 0}
-                                                required
-                                            >
-                                                <option value="">Select time slot</option>
-                                                {availableTimeSlots.map((slot, index) => (
-                                                    <option
-                                                        key={index}
-                                                        value={slot.value}
-                                                        disabled={slot.disabled}
-                                                    >
-                                                        {slot.label} {slot.disabled ? '(Booked)' : ''}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                        <CustomSelect
+                                            id="timeSlot"
+                                            value={formData.timeSlot}
+                                            onChange={(v) => setFormData({ ...formData, timeSlot: v })}
+                                            placeholder="Select time slot"
+                                            disabled={!formData.date || availableTimeSlots.length === 0}
+                                            options={availableTimeSlots.map((slot) => ({
+                                                value: slot.value,
+                                                label: `${slot.label}${slot.disabled ? ' (Booked)' : ''}`,
+                                                disabled: slot.disabled,
+                                            }))}
+                                        />
                                         {!formData.date && (
                                             <p className="text-secondary" style={{ fontSize: 'var(--text-sm)', marginTop: 'var(--space-1)' }}>
                                                 Please select a date first
                                             </p>
                                         )}
                                         {formData.date && availableTimeSlots.length === 0 && (
-                                            <p className="text-secondary" style={{ fontSize: 'var(--text-sm)', marginTop: 'var(--space-1)', color: '#f44336' }}>
+                                            <p className="text-secondary" style={{ fontSize: 'var(--text-sm)', marginTop: 'var(--space-1)', color: 'var(--color-danger)' }}>
                                                 No time slots available. Please update doctor's OPD schedule in admin panel.
                                             </p>
                                         )}
@@ -841,27 +843,24 @@ export default function BookAppointment() {
                     transform: translateY(0);
                 }
 
-                .btn-receipt-icon {
-                    font-size: var(--text-base);
-                }
-
                 .btn-print {
-                    background: var(--color-teal);
-                    color: white;
+                    background: var(--color-ember);
+                    color: var(--color-ink);
                 }
 
                 .btn-print:hover {
-                    background: #0d9488;
+                    background: var(--color-ember-deep);
+                    color: white;
                 }
 
                 .btn-download {
                     background: white;
-                    color: var(--color-teal);
-                    border-color: var(--color-teal);
+                    color: var(--color-ember-deep);
+                    border-color: var(--color-ember);
                 }
 
                 .btn-download:hover {
-                    background: #f0fdfa;
+                    background: var(--color-ember-tint);
                 }
 
                 .btn-close-confirm {
@@ -871,7 +870,7 @@ export default function BookAppointment() {
                 }
 
                 .btn-close-confirm:hover {
-                    background: #f5f5f5;
+                    background: var(--color-ground);
                     color: var(--color-text-primary);
                 }
 
@@ -880,15 +879,15 @@ export default function BookAppointment() {
                 }
 
                 .success-card {
-                    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
-                    border: 2px solid var(--color-teal);
+                    background: linear-gradient(135deg, var(--color-verdant-tint) 0%, var(--color-ground) 100%);
+                    border: 2px solid var(--color-verdant);
                     padding: var(--space-6);
                 }
 
                 .success-icon {
                     width: 80px;
                     height: 80px;
-                    background: var(--color-teal);
+                    background: var(--color-verdant);
                     color: white;
                     border-radius: var(--radius-full);
                     display: flex;
@@ -950,36 +949,6 @@ export default function BookAppointment() {
                     .detail-value {
                         text-align: left;
                     }
-                }
-
-                .custom-select {
-                    position: relative;
-                }
-
-                .custom-select::after {
-                    content: '▼';
-                    position: absolute;
-                    right: var(--space-3);
-                    top: 50%;
-                    transform: translateY(-50%);
-                    pointer-events: none;
-                    color: var(--color-teal);
-                    font-size: var(--text-sm);
-                }
-
-                .custom-select select {
-                    appearance: none;
-                    -webkit-appearance: none;
-                    -moz-appearance: none;
-                    width: 100%;
-                    padding-right: var(--space-8);
-                    cursor: pointer;
-                    background: var(--color-white);
-                }
-
-                .custom-select select:disabled {
-                    cursor: not-allowed;
-                    opacity: 0.6;
                 }
 
                 input:focus,

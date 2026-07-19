@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import './patient-login.css';
 import { useLoader } from '@/context/LoaderContext';
+import { ShieldCheck, Bolt, Calendar, Heart, Phone, Lock, ArrowRight } from '@/components/icons';
 
 export default function PatientPortal() {
     const [mobile, setMobile] = useState('');
@@ -106,15 +107,15 @@ export default function PatientPortal() {
 
                     <div className="patient-feature-grid">
                         <div className="patient-feature-badge">
-                            <span className="material-symbols-outlined">verified_user</span>
+                            <ShieldCheck size={22} />
                             <p>End-to-End Encryption</p>
                         </div>
                         <div className="patient-feature-badge">
-                            <span className="material-symbols-outlined">bolt</span>
+                            <Bolt size={22} />
                             <p>Real-time Lab Results</p>
                         </div>
                         <div className="patient-feature-badge">
-                            <span className="material-symbols-outlined">calendar_month</span>
+                            <Calendar size={22} />
                             <p>Easy Scheduling</p>
                         </div>
                     </div>
@@ -127,7 +128,7 @@ export default function PatientPortal() {
                         {/* Mobile-only logo */}
                         <div className="patient-mobile-logo">
                             <div className="patient-mobile-logo-icon">
-                                <span className="material-symbols-outlined">health_metrics</span>
+                                <Heart size={17} />
                             </div>
                             <span className="patient-mobile-logo-title">Shivaji Hospital</span>
                         </div>
@@ -148,7 +149,7 @@ export default function PatientPortal() {
                                         Mobile Number
                                     </label>
                                     <div className="patient-input-wrapper">
-                                        <span className="material-symbols-outlined patient-input-icon">phone_iphone</span>
+                                        <Phone size={19} className="patient-input-icon" />
                                         <input
                                             className="patient-input"
                                             type="tel"
@@ -160,15 +161,11 @@ export default function PatientPortal() {
                                             required
                                         />
                                     </div>
-                                    <button type="submit" className="patient-send-otp-btn">
-                                        <span>Send OTP</span>
-                                        <span className="material-symbols-outlined">send</span>
-                                    </button>
                                 </div>
 
                                 <button type="submit" className="patient-submit-btn">
                                     Send Verification Code
-                                    <span className="material-symbols-outlined">arrow_forward</span>
+                                    <ArrowRight size={18} />
                                 </button>
                             </form>
                         ) : (
@@ -190,7 +187,7 @@ export default function PatientPortal() {
                                         One-Time Password (OTP)
                                     </label>
                                     <div className="patient-input-wrapper">
-                                        <span className="material-symbols-outlined patient-input-icon">dialpad</span>
+                                        <Lock size={18} className="patient-input-icon" />
                                         <input
                                             className="patient-input"
                                             type="text"
@@ -207,10 +204,10 @@ export default function PatientPortal() {
 
                                 <button type="submit" className="patient-submit-btn">
                                     Verify & Sign In
-                                    <span className="material-symbols-outlined">arrow_forward</span>
+                                    <ArrowRight size={18} />
                                 </button>
 
-                                <p style={{ color: '#94a3b8', fontSize: '0.75rem', textAlign: 'center', margin: 0 }}>
+                                <p style={{ color: 'var(--color-muted-2)', fontSize: '0.75rem', textAlign: 'center', margin: 0 }}>
                                     This is a demo. In production, a real OTP would be sent.
                                 </p>
                             </form>

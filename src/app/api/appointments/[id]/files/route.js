@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
+import { requirePermission } from '@/utils/auth';
 
 const BUCKET = 'medical-files';
 
-// GET: List all files uploaded for this appointment (by storage path prefix)
+// GET: List all files uploaded for this appointment (staff only — these are medical documents)
 export async function GET(request, { params }) {
+    const { response: authError } = await requirePermission(request, 'medical_files');
+    if (authError) return authError;
+
     try {
-        const { id } = params;
+        const { id } = await params;
 
         // List files in bucket under the appointment's folder
         const { data: storageFiles, error: listError } = await supabaseAdmin
@@ -52,10 +56,13 @@ export async function GET(request, { params }) {
     }
 }
 
-// POST: Upload a file for an appointment
+// POST: Upload a file for an appointment (staff only)
 export async function POST(request, { params }) {
+    const { response: authError } = await requirePermission(request, 'medical_files');
+    if (authError) return authError;
+
     try {
-        const { id } = params;
+        const { id } = await params;
 
         // Parse multipart form data
         const formData = await request.formData();
@@ -132,15 +139,28 @@ export async function POST(request, { params }) {
     }
 }
 
-// DELETE: Delete a file by storage path
-export async function DELETE(request) {
+// DELETE: Delete a file by storage path (staff only)
+export async function DELETE(request, { params }) {
+    const { response: authError } = await requirePermission(request, 'medical_files');
+    if (authError) return authError;
+
     try {
+        const { id } = await params;
         const body = await request.json();
         const { filePath } = body;
 
         if (!filePath) {
             return NextResponse.json(
                 { success: false, error: 'filePath is required' },
+                { status: 400 }
+            );
+        }
+
+        // The path must stay inside this appointment's folder — blocks
+        // "../" tricks or deleting another appointment's files
+        if (filePath.includes('..') || !filePath.startsWith(`${id}/`)) {
+            return NextResponse.json(
+                { success: false, error: 'Invalid file path' },
                 { status: 400 }
             );
         }

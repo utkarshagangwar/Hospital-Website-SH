@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
 import { logAction } from '@/utils/auditLog';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 
 // GET: Fetch single appointment by id (staff only)
 export async function GET(request, { params }) {
   // Check authentication and authorization in one call (avoids double auth check)
-  const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+  const { user, response: authError } = await requirePermission(request, 'appointments_manage');
 
   if (authError) {
     return authError;
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const userId = user?.id;
 
     const { data, error } = await supabaseAdmin
@@ -49,14 +49,14 @@ export async function GET(request, { params }) {
 // PATCH: Update appointment status (staff only)
 export async function PATCH(request, { params }) {
   // Check authentication and authorization in one call (avoids double auth check)
-  const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+  const { user, response: authError } = await requirePermission(request, 'appointments_manage');
 
   if (authError) {
     return authError;
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const userId = user?.id;
     const body = await request.json();
     const { status, notes, appointment_date, appointment_time } = body;
@@ -112,14 +112,14 @@ export async function PATCH(request, { params }) {
 // DELETE: Cancel appointment (staff only)
 export async function DELETE(request, { params }) {
   // Check authentication and authorization in one call (avoids double auth check)
-  const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+  const { user, response: authError } = await requirePermission(request, 'appointments_manage');
 
   if (authError) {
     return authError;
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const userId = user?.id;
 
     // Check if appointment exists

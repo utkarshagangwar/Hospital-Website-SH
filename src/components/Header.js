@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useLoader } from '@/context/LoaderContext';
+import { Phone, MapPin, ChevronDown, UserCircle, ShieldCheck, Menu, Close } from '@/components/icons';
 
 // Custom link component that shows loader on navigation
 function NavLink({ href, children, className, onClick, isActive }) {
@@ -35,18 +36,55 @@ function NavLink({ href, children, className, onClick, isActive }) {
     );
 }
 
+// Mirrors the session check in admin/dashboard/page.js (adminAuth + authToken
+// present, and the 24h sessionExpiresAt ceiling not yet passed). Kept as a
+// standalone helper -- rather than a shared context -- since it's read-only
+// here and the dashboard already owns writing/clearing these keys.
+function hasValidAdminSession() {
+    if (typeof window === 'undefined') return false;
+    const auth = localStorage.getItem('adminAuth');
+    const token = localStorage.getItem('authToken');
+    const sessionExpiresAt = parseInt(localStorage.getItem('sessionExpiresAt') || '0', 10);
+    return auth === 'true' && !!token && !!sessionExpiresAt && Date.now() < sessionExpiresAt;
+}
+
 export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [contact, setContact] = useState(null);
+    // Defaults false to match SSR markup (no localStorage on the server);
+    // flips true right after mount if a valid admin session is found.
+    const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
     const pathname = usePathname();
     const { showLoader } = useLoader();
 
     useEffect(() => {
+        // Re-check on every client-side route change so logging in (which
+        // redirects to /admin/dashboard) or the 24h session lapsing while
+        // browsing is reflected without needing a full page reload.
+        setIsAdminLoggedIn(hasValidAdminSession());
+    }, [pathname]);
+
+    useEffect(() => {
+        // Catch login/logout happening in another tab, and the session
+        // expiring while this tab is idle in the background.
+        const recheck = () => setIsAdminLoggedIn(hasValidAdminSession());
+        window.addEventListener('storage', recheck);
+        window.addEventListener('focus', recheck);
+        return () => {
+            window.removeEventListener('storage', recheck);
+            window.removeEventListener('focus', recheck);
+        };
+    }, []);
+
+    useEffect(() => {
         fetch('/api/admin/settings')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) return null;
+                return res.json();
+            })
             .then(json => {
-                if (json.success && json.data && json.data.contact) {
+                if (json && json.success && json.data && json.data.contact) {
                     setContact(json.data.contact);
                 }
             })
@@ -87,6 +125,13 @@ export default function Header() {
         showLoader(300);
     };
 
+    // The admin dashboard is a self-contained app shell with its own fixed
+    // sidebar/top bar (pinned to the viewport) — the marketing header would
+    // either double up with it or, since it isn't fixed, silently break the
+    // dashboard's own hardcoded offsets the moment the page scrolls. This
+    // check must come after all hooks above so hook order never changes.
+    if (pathname?.startsWith('/admin/dashboard')) return null;
+
     return (
         <header className={`modern-header ${isScrolled ? 'scrolled' : ''}`}>
             <div className="container header-inner">
@@ -107,17 +152,12 @@ export default function Header() {
                 <div className="header-actions">
                     {contact?.phone && (
                         <a href={`tel:${contact.phone}`} className="action-icon-btn" aria-label="Call Us" title={`Call: ${contact.phone}`}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                            </svg>
+                            <Phone size={19} />
                         </a>
                     )}
                     {contact?.address && (
                         <a href={`https://maps.google.com/?q=${encodeURIComponent(contact.address)}`} className="action-icon-btn hidden-mobile" aria-label="Location" title={`Location: ${contact.address}`} target="_blank" rel="noopener noreferrer">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
+                            <MapPin size={19} />
                         </a>
                     )}
 
@@ -125,25 +165,16 @@ export default function Header() {
                     <div className="login-dropdown hidden-mobile">
                         <button className="login-dropdown-btn">
                             Login
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M6 9l6 6 6-6" />
-                            </svg>
+                            <ChevronDown size={15} />
                         </button>
                         <div className="login-dropdown-menu">
                             <NavLink href="/patient-portal">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
+                                <UserCircle size={17} />
                                 Patient Login
                             </NavLink>
-                            <NavLink href="/admin/login">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                                    <path d="M2 17l10 5 10-5"></path>
-                                    <path d="M2 12l10 5 10-5"></path>
-                                </svg>
-                                Admin Login
+                            <NavLink href={isAdminLoggedIn ? '/admin/dashboard' : '/admin/login'}>
+                                <ShieldCheck size={17} />
+                                {isAdminLoggedIn ? 'Dashboard' : 'Admin Login'}
                             </NavLink>
                         </div>
                     </div>
@@ -158,13 +189,7 @@ export default function Header() {
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         aria-label="Toggle Menu"
                     >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            {isMobileMenuOpen ? (
-                                <path d="M18 6L6 18M6 6l12 12" />
-                            ) : (
-                                <path d="M3 12h18M3 6h18M3 18h18" />
-                            )}
-                        </svg>
+                        {isMobileMenuOpen ? <Close size={22} /> : <Menu size={22} />}
                     </button>
                 </div>
 
@@ -176,9 +201,11 @@ export default function Header() {
                         <NavLink href="/doctors">Doctors</NavLink>
                         <NavLink href="/gallery">Gallery</NavLink>
                         <NavLink href="/contact">Contact</NavLink>
-                        <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-2)', paddingTop: 'var(--space-2)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-2)', paddingTop: 'var(--space-3)' }}>
                             <NavLink href="/patient-portal">Patient Login</NavLink>
-                            <NavLink href="/admin/login">Admin Login</NavLink>
+                            <NavLink href={isAdminLoggedIn ? '/admin/dashboard' : '/admin/login'}>
+                                {isAdminLoggedIn ? 'Dashboard' : 'Admin Login'}
+                            </NavLink>
                         </div>
                         <NavLink href="/book-appointment" className="mobile-cta">Book Appointment</NavLink>
                     </nav>

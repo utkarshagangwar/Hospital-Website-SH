@@ -1,12 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // API route configuration
-  api: {
-    // Limit request body size to 1MB for security
-    bodyParser: {
-      sizeLimit: '1mb',
-    },
-  },
   // Security headers
   async headers() {
     return [
@@ -15,7 +8,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.google.com https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://*.supabase.co https://*.google.com https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none';"
           },
           {
             key: 'X-Frame-Options',

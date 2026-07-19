@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 import { logAction } from '@/utils/auditLog';
 
 /**
@@ -15,7 +15,7 @@ import { logAction } from '@/utils/auditLog';
  */
 export async function POST(request) {
     // Check authentication - require admin, doctor, or receptionist role
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+    const { user, response: authError } = await requirePermission(request, 'appointments_manage');
 
     if (authError) {
         return authError;
@@ -48,8 +48,8 @@ export async function POST(request) {
 
             if (status) {
                 // Map status values - handle both old and new status names
-                const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled', 'paid', 'unpaid', 'rejected'];
-                updateData.status = validStatuses.includes(status.toLowerCase()) ? status : 'pending';
+                const validStatuses = ['paid', 'unpaid', 'rejected'];
+                updateData.status = validStatuses.includes(status.toLowerCase()) ? status : 'unpaid';
             }
             if (appointment_date) updateData.appointment_date = appointment_date;
             if (appointment_time !== undefined) updateData.appointment_time = appointment_time || null;
@@ -119,7 +119,7 @@ export async function POST(request) {
             doctor_id,
             appointment_date,
             appointment_time: appointment_time || null,
-            status: (status && ['pending', 'confirmed', 'completed', 'cancelled', 'paid', 'unpaid', 'rejected'].includes(status.toLowerCase())) ? status : 'pending',
+            status: (status && ['paid', 'unpaid', 'rejected'].includes(status.toLowerCase())) ? status : 'unpaid',
             notes: notes || null,
             patient_name: patient_name || null,
             appointment_type: appointment_type || null,

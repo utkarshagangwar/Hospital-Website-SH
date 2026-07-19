@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
 import { logAction } from '@/utils/auditLog';
 import { uploadDoctorImage } from '@/utils/storage';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 
 // GET: Fetch single doctor profile (public)
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { data, error } = await supabaseAdmin
       .from('doctors')
@@ -35,14 +35,14 @@ export async function GET(request, { params }) {
 // PATCH: Update doctor info (admin only)
 export async function PATCH(request, { params }) {
   // Check authentication and authorization in one call (avoids double auth check)
-  const { user, response: authError } = await requireRole(request, ['admin']);
+  const { user, response: authError } = await requirePermission(request, 'doctors_manage');
 
   if (authError) {
     return authError;
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const userId = user?.id;
     const contentType = request.headers.get('content-type');
 
@@ -130,14 +130,14 @@ export async function PATCH(request, { params }) {
 // DELETE: Remove doctor (admin only)
 export async function DELETE(request, { params }) {
   // Check authentication and authorization in one call (avoids double auth check)
-  const { user, response: authError } = await requireRole(request, ['admin']);
+  const { user, response: authError } = await requirePermission(request, 'doctors_manage');
 
   if (authError) {
     return authError;
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const userId = user?.id;
 
     // Check if doctor exists

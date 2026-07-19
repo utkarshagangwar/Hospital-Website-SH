@@ -1,29 +1,117 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Erode';
+  src: url('/fonts/erode-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Erode';
+  src: url('/fonts/erode-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Erode';
+  src: url('/fonts/erode-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Switzer';
+  src: url('/fonts/switzer-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Switzer';
+  src: url('/fonts/switzer-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Switzer';
+  src: url('/fonts/switzer-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Switzer';
+  src: url('/fonts/switzer-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
-  /* Colors - Minimalist Premium Palette */
-  --color-background: #f8fafc;
+  /* ── Colour — "Ember & Verdant" ──
+     Mist ground is a cool sage-neutral, deliberately not the cream/beige
+     an AI hospital site defaults to. Warmth comes from Ember + typography,
+     not from the background. */
+  --color-ground: #F1F3ED;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #E7EBE1;
   --color-white: #FFFFFF;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-accent-blue: #ecfeff;
-  --color-accent-sage: #E8F5E9;
-  /* Primary: vibrant cyan matching the design reference */
-  --color-teal: #06b6d4;
-  /* cyan-500 */
-  --color-teal-dark: #0891b2;
-  /* cyan-600 */
-  --color-border: #e2e8f0;
-  --color-shadow: rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 20px -5px rgba(6, 182, 212, 0.3);
-  --shadow-glow-hover: 0 0 30px -5px rgba(6, 182, 212, 0.5);
 
-  /* Typography */
-  --font-serif: 'Playfair Display', serif;
-  --font-sans: 'Inter', sans-serif;
+  --color-ink: #1E1712;
+  --color-muted: #4E4838;
+  --color-muted-2: #6B6354;
+
+  --color-ember: #E8703A;
+  --color-ember-deep: #B8551F;
+  --color-ember-tint: rgba(232, 112, 58, 0.10);
+  --color-ember-glow: rgba(232, 112, 58, 0.28);
+
+  --color-verdant: #4B7A5C;
+  --color-verdant-deep: #2A5240;
+  --color-verdant-tint: rgba(75, 122, 92, 0.10);
+
+  /* Semantic states — distinct from the brand accent so actions and status never collide */
+  --color-success: #2F7A4E;
+  --color-success-tint: rgba(47, 122, 78, 0.10);
+  --color-warning: #A6740E;
+  --color-warning-tint: rgba(166, 116, 14, 0.12);
+  --color-danger: #B3402E;
+  --color-danger-tint: rgba(179, 64, 46, 0.10);
+
+  --color-border: rgba(30, 23, 18, 0.12);
+  --color-border-strong: rgba(30, 23, 18, 0.22);
+  --color-shadow: rgba(30, 23, 18, 0.07);
+
+  /* Back-compat aliases so any un-migrated CSS falls onto the new system instead of the old cyan */
+  --color-background: var(--color-ground);
+  --color-text-primary: var(--color-ink);
+  --color-text-secondary: var(--color-muted);
+  --color-accent-blue: var(--color-ember-tint);
+  --color-accent-sage: var(--color-verdant-tint);
+  --color-teal: var(--color-ember);
+  --color-teal-dark: var(--color-ember-deep);
+  --shadow-glow: 0 8px 24px -6px rgba(232, 112, 58, 0.35);
+  --shadow-glow-hover: 0 14px 32px -6px rgba(232, 112, 58, 0.45);
+
+  /* ── Typography ── */
+  --font-display: 'Erode', Georgia, serif;
+  --font-sans: 'Switzer', 'Segoe UI', sans-serif;
+  --font-serif: var(--font-display);
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
   --text-2xl: 1.5rem;
 
-  /* Spacing Scale (8px grid) */
+  /* ── Spacing (8px grid) ── */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 16px;
@@ -33,7 +121,7 @@
   --space-12: 64px;
   --space-16: 96px;
 
-  /* Border Radius */
+  /* ── Radius ── */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
@@ -41,16 +129,37 @@
   --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* Shadows */
+  /* ── Shadows ── */
   --shadow-sm: 0 1px 2px var(--color-shadow);
-  --shadow-md: 0 4px 6px var(--color-shadow);
-  --shadow-lg: 0 10px 15px var(--color-shadow);
-  --shadow-xl: 0 20px 25px var(--color-shadow);
+  --shadow-md: 0 6px 16px var(--color-shadow);
+  --shadow-lg: 0 16px 40px rgba(30, 23, 18, 0.10);
+  --shadow-xl: 0 28px 60px rgba(30, 23, 18, 0.14);
 
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 350ms ease;
+  /* ── Motion — ease-out curves only, no bounce ── */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 150ms var(--ease-out-quart);
+  --transition-normal: 250ms var(--ease-out-quart);
+  --transition-slow: 450ms var(--ease-out-expo);
+
+  /* ── Z-index scale — never arbitrary ── */
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-dropdown: 200;
+  --z-floating: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-toast: 600;
+  --z-loader: 900;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 * {
@@ -59,23 +168,45 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
+  background-color: var(--color-ground);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
+/* Tailwind's preflight resets heading font-size to `inherit`, so every h1-h6
+   needs an explicit size here or it silently collapses to body text (16px).
+   This is the actual scale; page-specific classes still win by specificity
+   when a heading needs to be bigger or smaller than its default. */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-serif);
-  line-height: 1.2;
-  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
+h1 { font-size: clamp(2rem, 4vw, 2.75rem); letter-spacing: -0.015em; }
+h2 { font-size: clamp(1.375rem, 2.5vw, 1.75rem); }
+h3 { font-size: clamp(1.125rem, 1.5vw, 1.25rem); }
+h4 { font-size: 1.0625rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.9375rem; }
+
+p {
+  text-wrap: pretty;
 }
 
 a {
@@ -83,58 +214,31 @@ a {
   color: inherit;
 }
 
+:focus-visible {
+  outline: 2px solid var(--color-ember);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--color-ember);
+  color: var(--color-ink);
+}
+
+/* ─────────────────────────────────────────
+   Loader — the hospital's own pulse motif
+───────────────────────────────────────── */
 #loader-wrapper {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: #f8fbff;
+  inset: 0;
+  background-color: var(--color-ground);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
-  transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
-}
-
-.ekg-line {
-  width: 200px;
-  height: auto;
-  stroke: #0056b3;
-  stroke-width: 6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  animation: dash 2.5s linear infinite;
-}
-
-@keyframes dash {
-  0% {
-    stroke-dashoffset: 1000;
-  }
-
-  50% {
-    stroke-dashoffset: 0;
-  }
-
-  100% {
-    stroke-dashoffset: -1000;
-  }
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-
-  50% {
-    opacity: 1;
-  }
+  gap: var(--space-3);
+  z-index: var(--z-loader);
+  transition: opacity 0.5s var(--ease-out-quart), visibility 0.5s var(--ease-out-quart);
 }
 
 .loader-hidden {
@@ -143,7 +247,74 @@ a {
   pointer-events: none;
 }
 
-/* Utility Classes */
+.loader-pulse-wrap {
+  position: relative;
+  width: 176px;
+  height: 68px;
+}
+
+.loader-pulse-glow {
+  position: absolute;
+  inset: -22px;
+  background: radial-gradient(circle, var(--color-ember-glow) 0%, rgba(232, 112, 58, 0) 70%);
+  animation: loader-breathe 2.4s var(--ease-out-quart) infinite;
+}
+
+@keyframes loader-breathe {
+  0%, 100% { transform: scale(0.85); opacity: 0.5; }
+  50% { transform: scale(1.05); opacity: 0.95; }
+}
+
+.loader-pulse-track {
+  fill: none;
+  stroke: rgba(184, 85, 31, 0.18);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.loader-pulse-line {
+  fill: none;
+  stroke: url(#loaderEmberGrad);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 280;
+  stroke-dashoffset: 280;
+  animation: loader-draw 2.4s var(--ease-out-expo) infinite;
+  filter: drop-shadow(0 0 4px rgba(184, 85, 31, 0.35));
+}
+
+@keyframes loader-draw {
+  0% { stroke-dashoffset: 280; }
+  60% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -280; }
+}
+
+.loader-wordmark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.loader-wordmark span {
+  color: var(--color-ember-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-pulse-glow, .loader-pulse-line {
+    animation: none;
+  }
+  .loader-pulse-line {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ─────────────────────────────────────────
+   Utility Classes
+───────────────────────────────────────── */
 .container {
   width: 100%;
   max-width: 1200px;
@@ -156,85 +327,85 @@ a {
 }
 
 .text-secondary {
-  color: var(--color-text-secondary);
+  color: var(--color-muted);
 }
 
-.mb-1 {
-  margin-bottom: var(--space-1);
+.mb-1 { margin-bottom: var(--space-1); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-6 { margin-bottom: var(--space-6); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+.mt-6 { margin-top: var(--space-6); }
+
+/* Scroll-reveal, used across every page for entrance motion */
+.reveal-element {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s var(--ease-out-quart), transform 0.7s var(--ease-out-quart);
+  will-change: opacity, transform;
 }
 
-.mb-2 {
-  margin-bottom: var(--space-2);
+.reveal-element.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.mb-3 {
-  margin-bottom: var(--space-3);
+@media (prefers-reduced-motion: reduce) {
+  .reveal-element {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
-.mb-4 {
-  margin-bottom: var(--space-4);
-}
-
-.mb-6 {
-  margin-bottom: var(--space-6);
-}
-
-.mt-2 {
-  margin-top: var(--space-2);
-}
-
-.mt-3 {
-  margin-top: var(--space-3);
-}
-
-.mt-4 {
-  margin-top: var(--space-4);
-}
-
-.mt-6 {
-  margin-top: var(--space-6);
-}
-
-/* Components */
+/* ─────────────────────────────────────────
+   Components
+───────────────────────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-6);
   border-radius: var(--radius-full);
+  font-family: var(--font-sans);
   font-weight: 600;
-  transition: all var(--transition-normal);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), background-color var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal);
   cursor: pointer;
   border: none;
   font-size: 1rem;
 }
 
 .btn-primary {
-  background-color: var(--color-teal);
-  color: var(--color-white);
+  background-color: var(--color-ember);
+  color: var(--color-ink);
   box-shadow: var(--shadow-glow);
-  transition: all 0.3s;
 }
 
 .btn-primary:hover {
-  background-color: var(--color-teal-dark);
+  background-color: var(--color-ember-deep);
+  color: var(--color-white);
   transform: translateY(-2px);
   box-shadow: var(--shadow-glow-hover);
 }
 
 .btn-secondary {
-  background-color: var(--color-white);
-  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  color: var(--color-ink);
   border: 1px solid var(--color-border);
 }
 
 .btn-secondary:hover {
-  border-color: var(--color-teal);
-  color: var(--color-teal);
+  border-color: var(--color-ember);
+  color: var(--color-ember-deep);
 }
 
 .card {
-  background: var(--color-white);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
   padding: var(--space-6);
   box-shadow: var(--shadow-sm);
@@ -266,11 +437,11 @@ a {
 .badge {
   display: inline-block;
   padding: var(--space-1) var(--space-2);
-  background: var(--color-accent-blue);
-  color: var(--color-teal-dark);
+  background: var(--color-ember-tint);
+  color: var(--color-ember-deep);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .form-group {
@@ -280,8 +451,8 @@ a {
 .form-group label {
   display: block;
   margin-bottom: var(--space-1);
-  font-weight: 500;
-  color: var(--color-text-secondary);
+  font-weight: 600;
+  color: var(--color-ink);
 }
 
 .form-group input,
@@ -291,38 +462,44 @@ a {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 1rem;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--color-muted-2);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--color-teal);
-  box-shadow: 0 0 0 3px var(--color-accent-blue);
+  border-color: var(--color-ember);
+  box-shadow: 0 0 0 3px var(--color-ember-tint);
 }
 
 .back-link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  color: var(--color-text-secondary);
-  font-weight: 500;
+  color: var(--color-muted);
+  font-weight: 600;
   margin-bottom: var(--space-4);
-  transition: color var(--transition-fast);
+  transition: color var(--transition-fast), gap var(--transition-fast);
 }
 
 .back-link:hover {
-  color: var(--color-teal);
+  color: var(--color-ember-deep);
+  gap: var(--space-2);
 }
 
-/* ====================================
-   SHARED COMPONENT STYLES
-   ==================================== */
-
-/* Doctor Profile Images */
+/* ────────────────────────────────────────
+   Doctor Profile Images (shared)
+──────────────────────────────────────── */
 .doctor-image-container {
   position: relative;
   width: 280px;
@@ -340,21 +517,26 @@ a {
   border: 4px solid var(--color-white);
 }
 
-/* Service Icons */
-/* ====================================
-   MODERN HEADER STYLES
-   ==================================== */
-
+/* ════════════════════════════════════════
+   HEADER
+════════════════════════════════════════ */
 .modern-header {
   position: sticky;
   top: 0;
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  /* Single border — keep it constant so it never animates */
-  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
-  /* Transition ONLY the props that change on scroll — avoids flickering from 'all' */
+  z-index: var(--z-sticky);
+  /* High enough alpha that the header reads as solid chrome even sitting
+     directly over the hero photo (a busy, high-contrast image) before the
+     user has scrolled — at 0.72 the photo bled through enough to blur nav
+     text and controls into the background instead of sitting clearly above
+     it. The blur still gives it a frosted feel; it just no longer depends on
+     what happens to be behind it for legibility. A permanent (if faint)
+     shadow gives it a visible edge at rest too, instead of only once
+     .scrolled adds one. */
+  background: rgba(241, 243, 237, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 12px rgba(30, 23, 18, 0.05);
   transition:
     background-color 0.3s ease,
     box-shadow 0.3s ease,
@@ -364,10 +546,9 @@ a {
 }
 
 .modern-header.scrolled {
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.08);
+  background: rgba(241, 243, 237, 0.95);
+  box-shadow: 0 1px 24px rgba(30, 23, 18, 0.08);
   padding: var(--space-2) 0;
-  /* No border-bottom change here — keeps the single line, no double-line flicker */
 }
 
 .header-inner {
@@ -377,11 +558,21 @@ a {
 }
 
 .logo {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  color: var(--color-ink);
+  letter-spacing: -0.01em;
+}
+
+.admin-layout {
+  margin-left: 210px;
+}
+
+@media (max-width: 880px) {
+  .admin-layout {
+    margin-left: 0;
+  }
 }
 
 /* Desktop Nav */
@@ -393,7 +584,7 @@ a {
 
 .desktop-nav a {
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--color-muted);
   transition: color var(--transition-fast);
   position: relative;
   font-size: 0.95rem;
@@ -401,7 +592,7 @@ a {
 
 .desktop-nav a:hover,
 .desktop-nav a.active {
-  color: var(--color-teal-dark);
+  color: var(--color-ember-deep);
 }
 
 .desktop-nav a.active::after {
@@ -411,7 +602,7 @@ a {
   left: 0;
   width: 100%;
   height: 2px;
-  background: var(--color-teal);
+  background: var(--color-ember);
   border-radius: 2px;
 }
 
@@ -430,14 +621,13 @@ a {
   height: 40px;
   border-radius: var(--radius-full);
   background: transparent;
-  color: #64748b;
-  /* text-muted-light */
+  color: var(--color-muted);
   transition: all var(--transition-fast);
 }
 
 .action-icon-btn:hover {
-  background: #f1f5f9;
-  color: var(--color-text-primary);
+  background: var(--color-surface-2);
+  color: var(--color-ink);
 }
 
 .btn-sm {
@@ -451,7 +641,7 @@ a {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-text-primary);
+  color: var(--color-ink);
   padding: var(--space-1);
 }
 
@@ -460,37 +650,29 @@ a {
   position: fixed;
   left: 0;
   width: 100%;
-  background: var(--color-white);
-  /* No border when closed — prevents the ghost second-line under the header */
+  background: var(--color-surface);
   border-bottom: none;
   padding: 0;
   max-height: 0;
   overflow: hidden;
   transition: max-height var(--transition-normal);
   box-shadow: none;
-  z-index: 999;
+  z-index: var(--z-dropdown);
 }
 
 .mobile-menu.open {
-  max-height: 400px;
+  max-height: 420px;
   padding: var(--space-4) 0;
   border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow-md);
 }
 
-/* Mobile menu is INSIDE the header, so use a child selector, not a sibling */
 .modern-header .mobile-menu {
   top: 70px;
-  /* default header height offset */
 }
 
 .modern-header.scrolled .mobile-menu {
   top: 60px;
-}
-
-.mobile-menu.open {
-  max-height: 400px;
-  padding: var(--space-4) 0;
 }
 
 .mobile-menu nav {
@@ -503,11 +685,11 @@ a {
 .mobile-menu nav a {
   font-size: 1.1rem;
   font-weight: 500;
-  color: var(--color-text-primary);
+  color: var(--color-ink);
 }
 
 .mobile-cta {
-  color: var(--color-teal) !important;
+  color: var(--color-ember-deep) !important;
   font-weight: 600 !important;
 }
 
@@ -524,15 +706,23 @@ a {
   background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  color: var(--color-text-primary);
+  color: var(--color-ink);
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .login-dropdown-btn:hover {
-  border-color: var(--color-teal);
-  color: var(--color-teal);
+  border-color: var(--color-ember);
+  color: var(--color-ember-deep);
+}
+
+.login-dropdown-btn svg {
+  transition: transform var(--transition-fast);
+}
+
+.login-dropdown:hover .login-dropdown-btn svg {
+  transform: rotate(180deg);
 }
 
 .login-dropdown-menu {
@@ -540,16 +730,16 @@ a {
   top: calc(100% + 8px);
   right: 0;
   min-width: 200px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
-  transition: all var(--transition-normal);
-  z-index: 1000;
+  transform: translateY(-8px);
+  transition: opacity var(--transition-normal), transform var(--transition-normal), visibility var(--transition-normal);
+  z-index: var(--z-dropdown);
   overflow: hidden;
 }
 
@@ -564,7 +754,7 @@ a {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  color: var(--color-text-primary);
+  color: var(--color-ink);
   font-weight: 500;
   transition: all var(--transition-fast);
   border-bottom: 1px solid var(--color-border);
@@ -575,48 +765,36 @@ a {
 }
 
 .login-dropdown-menu a:hover {
-  background: var(--color-accent-blue);
-  color: var(--color-teal);
+  background: var(--color-ember-tint);
+  color: var(--color-ember-deep);
 }
 
 .login-dropdown-menu a svg {
   flex-shrink: 0;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
-  .desktop-nav {
-    display: none;
-  }
-
-  .hidden-mobile {
-    display: none;
-  }
-
-  .mobile-toggle {
-    display: block;
-  }
+  .desktop-nav { display: none; }
+  .hidden-mobile { display: none; }
+  .mobile-toggle { display: block; }
 }
 
-/* ====================================================
-   FOOTER — matches SH_home.txt design
-   ==================================================== */
+/* ════════════════════════════════════════
+   FOOTER
+════════════════════════════════════════ */
 .footer {
-  background: #111111;
-  color: #d1d5db;
-  /* gray-300 default text */
-  border-top: 1px solid #1f2937;
+  background: var(--color-ink);
+  color: #C9C2B4;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   margin-top: auto;
 }
 
-/* Inner container with sections padding */
 .footer-inner {
   max-width: 1280px;
   margin: 0 auto;
   padding: 4rem 1.5rem 2rem;
 }
 
-/* 4-column grid */
 .footer-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -625,9 +803,7 @@ a {
 }
 
 @media (min-width: 640px) {
-  .footer-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .footer-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 1024px) {
@@ -637,7 +813,6 @@ a {
   }
 }
 
-/* ── Column 1: Brand ── */
 .footer-brand-col {
   display: flex;
   flex-direction: column;
@@ -645,22 +820,20 @@ a {
 
 .footer-logo {
   display: block;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #ffffff;
   margin-bottom: 1rem;
   letter-spacing: -0.01em;
 }
 
 .footer-logo-accent {
-  color: #06b6d4;
-  /* primary cyan */
+  color: var(--color-ember);
 }
 
 .footer-brand-desc {
-  color: #9ca3af;
-  /* gray-400 */
+  color: #9C9384;
   font-size: 0.875rem;
   line-height: 1.7;
   margin-bottom: 1.5rem;
@@ -672,31 +845,23 @@ a {
 }
 
 .footer-social-link {
-  color: #9ca3af;
-  transition: color 0.2s;
-  text-decoration: none;
-  line-height: 1;
+  display: inline-flex;
+  color: #9C9384;
+  transition: color var(--transition-fast);
 }
 
 .footer-social-link:hover {
-  color: #06b6d4;
+  color: var(--color-ember);
 }
 
-.footer-social-link .material-icons-outlined {
-  font-size: 1.375rem !important;
-}
-
-/* ── Headings ── */
 .footer-heading {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 1.0625rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #ffffff;
   margin-bottom: 1.5rem;
-  letter-spacing: 0;
 }
 
-/* ── Quick Links ── */
 .footer-nav-list {
   list-style: none;
   padding: 0;
@@ -707,18 +872,15 @@ a {
 }
 
 .footer-nav-link {
-  color: #9ca3af;
-  /* gray-400 */
+  color: #9C9384;
   font-size: 0.9375rem;
-  text-decoration: none;
-  transition: color 0.2s;
+  transition: color var(--transition-fast);
 }
 
 .footer-nav-link:hover {
-  color: #06b6d4;
+  color: var(--color-ember);
 }
 
-/* ── Contact ── */
 .footer-contact-list {
   list-style: none;
   padding: 0;
@@ -735,16 +897,14 @@ a {
 }
 
 .footer-contact-icon {
-  color: #06b6d4 !important;
-  font-size: 1.25rem !important;
+  color: var(--color-ember) !important;
   flex-shrink: 0;
   margin-top: 2px;
 }
 
 .footer-contact-label {
   display: block;
-  color: #9ca3af;
-  /* gray-400 */
+  color: #9C9384;
   font-size: 0.75rem;
   margin-bottom: 0.125rem;
 }
@@ -756,21 +916,19 @@ a {
 }
 
 .footer-contact-link {
-  text-decoration: none;
-  transition: color 0.2s;
+  transition: color var(--transition-fast);
 }
 
 .footer-contact-link:hover {
-  color: #06b6d4;
+  color: var(--color-ember);
 }
 
-/* ── Hospital Hours ── */
 .footer-hours-list {
   list-style: none;
   padding: 0;
   margin: 0;
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: #9C9384;
 }
 
 .footer-hours-row {
@@ -786,44 +944,38 @@ a {
 }
 
 .footer-hours-day {
-  color: #9ca3af;
-  /* gray-400 */
+  color: #9C9384;
   flex-shrink: 0;
 }
 
 .footer-hours-time {
   color: #ffffff;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .footer-hours-closed {
-  color: #06b6d4;
-  /* primary — matches design's text-primary for "Closed" */
+  color: var(--color-ember);
   font-weight: 500;
 }
 
 .footer-hours-divider {
-  border-top: 1px solid #1f2937;
-  /* gray-800 */
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   margin: 0.5rem 0;
 }
 
-/* ── Footer Bottom ── */
 .footer-bottom {
-  border-top: 1px solid #1f2937;
-  /* gray-800 */
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 2rem;
   text-align: center;
 }
 
 .footer-bottom p {
-  color: #6b7280;
-  /* gray-500 */
+  color: #6B6355;
   font-size: 0.875rem;
   margin: 0;
 }
 
-/* Legacy class kept for backwards compat with other pages */
 .footer-content {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -838,21 +990,19 @@ a {
 }
 
 .footer-links a {
-  color: #9ca3af;
+  color: #9C9384;
   transition: color var(--transition-fast);
-  text-decoration: none;
 }
 
 .footer-links a:hover {
-  color: #06b6d4;
+  color: var(--color-ember);
 }
 
 .footer-links p {
-  color: #9ca3af;
+  color: #9C9384;
   margin: 0;
 }
 
-/* old .footer h4 kept so other pages don't break */
 .footer h4 {
   color: #ffffff;
   font-size: 1.0625rem;
@@ -864,24 +1014,24 @@ a {
   position: fixed;
   bottom: var(--space-4);
   right: var(--space-4);
-  background: var(--color-teal);
-  color: var(--color-white);
+  background: var(--color-ember);
+  color: var(--color-ink);
   padding: var(--space-3);
   border-radius: var(--radius-full);
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-glow);
   display: flex;
   align-items: center;
   gap: var(--space-2);
   font-weight: 600;
-  transition: all var(--transition-normal);
-  z-index: 50;
-  text-decoration: none;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), background-color var(--transition-normal), color var(--transition-normal);
+  z-index: var(--z-floating);
 }
 
 .floating-book-btn:hover {
-  background: var(--color-teal-dark);
+  background: var(--color-ember-deep);
+  color: var(--color-white);
   transform: translateY(-4px);
-  box-shadow: 0 25px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-glow-hover);
 }
 
 @media (max-width: 768px) {
@@ -897,13 +1047,31 @@ a {
   }
 }
 
-/* Spinner animation for file upload */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
+/* ────────────────────────────────────────
+   Page transition wrapper
+──────────────────────────────────────── */
+.route-fade {
+  /* No "forwards" fill-mode: once the animation ends, the ending keyframe's
+     transform: translateY(0) must stop being part of the computed style.
+     A lingering non-"none" transform on this ancestor (even one that's
+     visually a no-op) creates a new containing block, which silently
+     breaks position: fixed on every descendant across the app — e.g. the
+     admin dashboard's sidebar/navbar, which would scroll instead of
+     staying pinned. */
+  animation: route-fade-in 0.5s var(--ease-out-quart);
+}
 
-  100% {
-    transform: rotate(360deg);
+@keyframes route-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-fade {
+    animation: route-fade-in-reduced 0.2s linear both;
+  }
+  @keyframes route-fade-in-reduced {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 }

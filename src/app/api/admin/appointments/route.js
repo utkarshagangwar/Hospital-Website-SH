@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 
 // GET: All appointments (admin, doctor, receptionist only)
 export async function GET(request) {
     // Check authentication and authorization
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+    const { user, response: authError } = await requirePermission(request, 'appointments_view');
 
     if (authError) {
         return authError;

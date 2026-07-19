@@ -6,11 +6,29 @@ import { useState, useEffect } from 'react';
 import { getHospitalData, initializeData } from '@/utils/hospitalData';
 import { useLoader } from '@/context/LoaderContext';
 import './page.css';
+import { Pulse, Droplet, Stethoscope, ClipboardList, Activity, Siren, ShieldCheck, FlaskConical, Clock, ArrowLeft, ArrowRight, Phone, WhatsApp } from '@/components/icons';
+
+// Hero background carousel — sequence fixed per request: OPD, doctor, ward.
+const HERO_IMAGES = [
+  { src: '/images/sh_out.png', alt: 'Shivaji Hospital OPD and reception area' },
+  { src: '/images/sh_dr.png', alt: 'Doctor consultation at Shivaji Hospital' },
+  { src: '/images/sh_ward.png', alt: 'Patient ward at Shivaji Hospital' },
+];
+const HERO_SLIDE_INTERVAL_MS = 8000;
 
 export default function Home() {
   const [hospitalData, setHospitalData] = useState(null);
   const [currentDoctorIndex, setCurrentDoctorIndex] = useState(0);
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
   const { hideLoader } = useLoader();
+
+  // Auto-advance the hero background carousel; CSS handles the fade (see .hero-bg-image)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroImageIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+    }, HERO_SLIDE_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,9 +38,9 @@ export default function Home() {
           fetch('/api/doctors'),
           fetch('/api/services')
         ]);
-        const settings = await settingsRes.json();
-        const doctors = await doctorsRes.json();
-        const services = await servicesRes.json();
+        const settings = settingsRes.ok ? await settingsRes.json() : {};
+        const doctors = doctorsRes.ok ? await doctorsRes.json() : {};
+        const services = servicesRes.ok ? await servicesRes.json() : {};
 
         setHospitalData({
           contact: settings.data?.contact || {
@@ -99,17 +117,16 @@ export default function Home() {
 
   const { services, doctors, contact } = hospitalData;
 
-  // Icon map for services
+  // Icon map for services — custom line icons, not a stock icon-font.
+  // Unmatched service names fall back to Activity rather than repeating
+  // one of the icons already assigned above.
   const serviceIconMap = {
-    'Cardiology': 'monitor_heart',
-    'Diabetes Care': 'bloodtype',
-    'General Medicine': 'medical_services',
-  };
-
-  const serviceBgIconMap = {
-    'Cardiology': 'favorite_border',
-    'Diabetes Care': 'water_drop',
-    'General Medicine': 'medication',
+    'Cardiology': Pulse,
+    'Diabetes Care': Droplet,
+    'General Medicine': Stethoscope,
+    'General OPD': ClipboardList,
+    'Lab Diagnostics': FlaskConical,
+    'Specialist Consultation': ShieldCheck,
   };
 
   return (
@@ -118,13 +135,17 @@ export default function Home() {
       {/* ── Hero Section ── */}
       <section className="hero-section">
         <div className="hero-bg">
-          <Image
-            src="/images/hero.png"
-            alt="Hospital Reception"
-            fill
-            style={{ objectFit: 'cover' }}
-            priority
-          />
+          {HERO_IMAGES.map((image, index) => (
+            <Image
+              key={image.src}
+              src={image.src}
+              alt={image.alt}
+              fill
+              style={{ objectFit: 'cover' }}
+              priority={index === 0}
+              className={`hero-bg-image${index === heroImageIndex ? ' is-active' : ''}`}
+            />
+          ))}
           <div className="hero-overlay"></div>
         </div>
 
@@ -150,17 +171,13 @@ export default function Home() {
               </Link>
               {contact.phone && (
                 <a href={`tel:${contact.phone}`} className="btn-hero-secondary" title={`Call: ${contact.phone}`}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.26 12 19.79 19.79 0 0 1 1.19 3.41 2 2 0 0 1 3.17 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
+                  <Phone size={19} />
                   Call
                 </a>
               )}
               {contact.whatsapp && (
                 <a href={`https://wa.me/91${contact.whatsapp}`} className="btn-hero-secondary" target="_blank" rel="noopener noreferrer" title={`WhatsApp: ${contact.whatsapp}`}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                  </svg>
+                  <WhatsApp size={19} />
                   WhatsApp
                 </a>
               )}
@@ -168,15 +185,15 @@ export default function Home() {
 
             <div className="hero-badges">
               <div className="hero-badge">
-                <span className="material-icons-outlined hero-badge-icon">local_hospital</span>
+                <Siren size={21} className="hero-badge-icon" />
                 <span>24/7 Emergency</span>
               </div>
               <div className="hero-badge">
-                <span className="material-icons-outlined hero-badge-icon">verified_user</span>
+                <ShieldCheck size={21} className="hero-badge-icon" />
                 <span>Expert Doctors</span>
               </div>
               <div className="hero-badge">
-                <span className="material-icons-outlined hero-badge-icon">science</span>
+                <FlaskConical size={21} className="hero-badge-icon" />
                 <span>Modern Labs</span>
               </div>
             </div>
@@ -188,47 +205,48 @@ export default function Home() {
       <section className="services-section">
         <div className="section-container">
           <div className="section-header">
-            <span className="section-eyebrow">Our Expertise</span>
+            <span className="section-eyebrow">
+              <span className="section-eyebrow-line" aria-hidden="true"></span>
+              Our Expertise
+              <span className="section-eyebrow-line" aria-hidden="true"></span>
+            </span>
             <h2 className="section-title">Medical Services</h2>
           </div>
 
           <div className="services-grid">
-            {services.map((service, index) => (
-              <div key={service.id} className="service-card-new reveal-element" style={{ transitionDelay: `${index * 0.1}s` }}>
-                {/* Decorative bg icon */}
-                <div className="service-bg-icon" aria-hidden="true">
-                  <span className="material-icons-outlined">
-                    {serviceBgIconMap[service.name] || 'medical_services'}
+            {services.map((service, index) => {
+              const ServiceIcon = serviceIconMap[service.name] || Activity;
+              return (
+                <div key={service.id} className="service-card-new reveal-element" style={{ transitionDelay: `${index * 0.1}s` }}>
+                  {/* Decorative bg icon */}
+                  <div className="service-bg-icon" aria-hidden="true">
+                    <ServiceIcon size={112} strokeWidth={1.2} />
+                  </div>
+
+                  {/* Icon box */}
+                  <div className="service-icon-box">
+                    {service.icon ? (
+                      <Image
+                        src={service.icon}
+                        alt={service.name}
+                        width={36}
+                        height={36}
+                        style={{ objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <ServiceIcon size={30} className="service-icon-symbol" />
+                    )}
+                  </div>
+
+                  <h3 className="service-card-title">{service.name}</h3>
+                  <p className="service-card-desc">{service.description}</p>
+                  <span className="service-learn-more">
+                    Learn more
+                    <ArrowRight size={16} />
                   </span>
                 </div>
-
-                {/* Icon box */}
-                <div className="service-icon-box">
-                  {service.icon ? (
-                    <Image
-                      src={service.icon}
-                      alt={service.name}
-                      width={36}
-                      height={36}
-                      style={{ objectFit: 'contain' }}
-                    />
-                  ) : (
-                    <span className="material-icons-outlined service-icon-symbol">
-                      {serviceIconMap[service.name] || 'medical_services'}
-                    </span>
-                  )}
-                </div>
-
-                <h3 className="service-card-title">{service.name}</h3>
-                <p className="service-card-desc">{service.description}</p>
-                {/* <span className="service-learn-more">
-                  Learn more
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </span> */}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -254,6 +272,7 @@ export default function Home() {
               <div className="section-underline"></div>
             </div>
 
+            {/* Doctors Section */}
             <div className="doctor-card-wrapper reveal-element" style={{ position: 'relative' }}>
               <div className="doctor-card">
                 {/* Doctor image */}
@@ -290,14 +309,14 @@ export default function Home() {
                     <div className="doctor-detail-row">
                       <span className="detail-label">OPD Hours:</span>
                       <div className="detail-value detail-hours">
-                        <span className="material-icons-outlined detail-icon">schedule</span>
+                        <Clock size={16} className="detail-icon" />
                         {doctors[currentDoctorIndex].opdHours}
                       </div>
                     </div>
                   </div>
 
                   <Link href="/book-appointment" className="btn-book-doctor">
-                    Book Appointment with {doctors[currentDoctorIndex].name.split(' ')[1]}
+                    Book Appointment with {doctors[currentDoctorIndex].name.split(' ')[0] + ' ' + doctors[currentDoctorIndex].name.split(' ')[1]}
                   </Link>
                 </div>
               </div>
@@ -310,18 +329,14 @@ export default function Home() {
                     className="doctor-nav-btn doctor-nav-prev"
                     aria-label="Previous Doctor"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M15 18l-6-6 6-6" />
-                    </svg>
+                    <ArrowLeft size={22} />
                   </button>
                   <button
                     onClick={handleNextDoctor}
                     className="doctor-nav-btn doctor-nav-next"
                     aria-label="Next Doctor"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
+                    <ArrowRight size={22} />
                   </button>
 
                   <div className="doctor-dots">

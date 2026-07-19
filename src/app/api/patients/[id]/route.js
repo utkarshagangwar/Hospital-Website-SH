@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
 import { logAction } from '@/utils/auditLog';
-import { requireRole } from '@/utils/auth';
+import { requireRole, requirePermission } from '@/utils/auth';
 
 // GET: Fetch single patient with their appointments and records
 export async function GET(request, { params }) {
     // Check authentication and authorization in one call (avoids double auth check)
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+    const { user, response: authError } = await requirePermission(request, 'patients_manage');
     
     if (authError) {
         return authError;
     }
     
     try {
-        const { id } = params;
+        const { id } = await params;
         const userId = user?.id;
 
         // Get patient details
@@ -73,14 +73,14 @@ export async function GET(request, { params }) {
 // PATCH: Update patient details (staff only)
 export async function PATCH(request, { params }) {
     // Check authentication and authorization in one call (avoids double auth check)
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+    const { user, response: authError } = await requirePermission(request, 'patients_manage');
     
     if (authError) {
         return authError;
     }
     
     try {
-        const { id } = params;
+        const { id } = await params;
         const body = await request.json();
         const userId = user?.id;
         const { full_name, date_of_birth, gender, phone, address, blood_group } = body;
@@ -145,7 +145,7 @@ export async function DELETE(request, { params }) {
     }
     
     try {
-        const { id } = params;
+        const { id } = await params;
         const userId = user?.id;
 
         // Check if patient exists

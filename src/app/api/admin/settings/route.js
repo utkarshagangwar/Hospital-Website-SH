@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 
 const DEFAULT_SETTINGS = {
     opdHours: {
@@ -51,7 +51,7 @@ export async function GET() {
 // PUT: upsert a setting { key, value } - admin only
 export async function PUT(request) {
     // Check authentication and authorization - admin only for modifying settings
-    const { user, response: authError } = await requireRole(request, ['admin']);
+    const { user, response: authError } = await requirePermission(request, 'settings_manage');
 
     if (authError) {
         return authError;

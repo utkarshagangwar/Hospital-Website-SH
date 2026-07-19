@@ -6,11 +6,14 @@
 -- ============================================================================
 -- TABLE 1: profiles (for staff accounts)
 -- ============================================================================
+-- Role list must stay in sync with ROLES in src/utils/roles.js. 'receptionist'
+-- is kept only as a legacy alias of 'reception' for accounts created before
+-- that rename.
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT,
   phone TEXT,
-  role TEXT CHECK (role IN ('admin', 'doctor', 'receptionist')) DEFAULT 'receptionist',
+  role TEXT CHECK (role IN ('admin', 'doctor', 'reception', 'receptionist', 'pathology_lab', 'medical_store')) DEFAULT 'reception',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -317,7 +320,7 @@ BEGIN
     NEW.id,
     NEW.raw_user_meta_data->>'full_name',
     NEW.raw_user_meta_data->>'phone',
-    COALESCE(NEW.raw_user_meta_data->>'role', 'receptionist')
+    COALESCE(NEW.raw_user_meta_data->>'role', 'reception')
   );
   RETURN NEW;
 END;

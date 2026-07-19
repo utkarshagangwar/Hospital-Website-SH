@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import { Facebook, Instagram, WhatsApp, Phone, Mail, MapPin } from '@/components/icons';
 
 const DEFAULT_CONTACT = {
     phone: '9044952554',
@@ -19,12 +21,16 @@ export default function Footer() {
     // Start as null — render nothing until API responds (avoids flash of wrong data)
     const [contact, setContact] = useState(null);
     const [opdHours, setOpdHours] = useState(null);
+    const pathname = usePathname();
 
     useEffect(() => {
         fetch('/api/admin/settings')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) return null;
+                return res.json();
+            })
             .then(json => {
-                if (json.success && json.data) {
+                if (json && json.success && json.data) {
                     setContact(json.data.contact || DEFAULT_CONTACT);
                     setOpdHours(json.data.opdHours || DEFAULT_OPD);
                 } else {
@@ -75,6 +81,10 @@ export default function Footer() {
         ));
     };
 
+    // The admin dashboard is a self-contained app shell (own fixed sidebar
+    // and top bar) — the marketing footer has no place inside it.
+    if (pathname?.startsWith('/admin/dashboard')) return null;
+
     return (
         <footer className="footer">
             <div className="footer-inner">
@@ -92,13 +102,13 @@ export default function Footer() {
                         </p>
                         <div className="footer-social">
                             <a href="#" className="footer-social-link" aria-label="Facebook">
-                                <span className="material-icons-outlined">facebook</span>
+                                <Facebook size={21} />
                             </a>
-                            <a href="#" className="footer-social-link" aria-label="Twitter">
-                                <span className="material-icons-outlined">water_drop</span>
+                            <a href="#" className="footer-social-link" aria-label="WhatsApp">
+                                <WhatsApp size={21} />
                             </a>
                             <a href="#" className="footer-social-link" aria-label="Instagram">
-                                <span className="material-icons-outlined">photo_camera</span>
+                                <Instagram size={21} />
                             </a>
                         </div>
                     </div>
@@ -120,7 +130,7 @@ export default function Footer() {
                             <h4 className="footer-heading">Contact</h4>
                             <ul className="footer-contact-list">
                                 <li className="footer-contact-item">
-                                    <span className="material-icons-outlined footer-contact-icon">phone</span>
+                                    <Phone size={19} className="footer-contact-icon" />
                                     <div>
                                         <span className="footer-contact-label">Phone</span>
                                         <a href={`tel:${contact.phone}`} className="footer-contact-value footer-contact-link">
@@ -129,7 +139,7 @@ export default function Footer() {
                                     </div>
                                 </li>
                                 <li className="footer-contact-item">
-                                    <span className="material-icons-outlined footer-contact-icon">email</span>
+                                    <Mail size={19} className="footer-contact-icon" />
                                     <div>
                                         <span className="footer-contact-label">Email</span>
                                         <a href={`mailto:${contact.email}`} className="footer-contact-value footer-contact-link" style={{ wordBreak: 'break-all' }}>
@@ -138,7 +148,7 @@ export default function Footer() {
                                     </div>
                                 </li>
                                 <li className="footer-contact-item">
-                                    <span className="material-icons-outlined footer-contact-icon">location_on</span>
+                                    <MapPin size={19} className="footer-contact-icon" />
                                     <div>
                                         <span className="footer-contact-label">Address</span>
                                         <span className="footer-contact-value">{contact.address}</span>
@@ -166,7 +176,7 @@ export default function Footer() {
 
                 {/* ── Footer Bottom ── */}
                 <div className="footer-bottom">
-                    <p>© 2025 Shivaji Hospital. All rights reserved.</p>
+                    <p>© Shivaji Hospital. All rights reserved.</p>
                 </div>
             </div>
         </footer>

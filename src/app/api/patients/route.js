@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
 import { logAction } from '@/utils/auditLog';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 
 // GET: Fetch all patients (admin/doctor/receptionist only)
 export async function GET(request) {
     // Check authentication and authorization in one call (avoids double auth check)
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+    const { user, response: authError } = await requirePermission(request, 'patients_manage');
     
     if (authError) {
         return authError;
@@ -53,7 +53,7 @@ export async function GET(request) {
 // POST: Create a new patient record (staff only)
 export async function POST(request) {
     // Check authentication and authorization in one call (avoids double auth check)
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+    const { user, response: authError } = await requirePermission(request, 'patients_manage');
     
     if (authError) {
         return authError;

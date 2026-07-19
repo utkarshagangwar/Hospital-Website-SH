@@ -1,0 +1,133 @@
+/* ════════════════════════════════════════════════════════════════════
+   Admin dashboard — structural/responsive rules only.
+   Everything else (colors, spacing, typography) stays as inline styles
+   in page.js; these specific properties (position, transform, layout
+   mode) have to live in real CSS because inline styles always win over
+   an external stylesheet, so a <style> media query could never override
+   them otherwise.
+   ════════════════════════════════════════════════════════════════════ */
+
+.admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 210px;
+    transform: translateX(0);
+    transition: transform 0.25s var(--ease-out-quart);
+}
+
+.admin-navbar {
+    position: fixed;
+    top: 0;
+    left: 210px;
+    right: 0;
+    height: 58px;
+}
+
+.admin-mobile-toggle {
+    display: none;
+}
+
+/* These chips set alignItems in their inline styles (page.js) but can't set
+   `display` there — the >880px media query below needs to own `display` so
+   it can hide them on narrow screens. Without a flex/inline-flex display,
+   alignItems does nothing, which is why the date chip text wasn't centering
+   vertically inside its box. */
+.admin-live-chip,
+.admin-date-chip {
+    display: inline-flex;
+}
+
+.admin-sidebar-backdrop {
+    display: none;
+}
+
+.admin-main {
+    padding: 24px 28px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-sidebar {
+        transition: none;
+    }
+}
+
+@media (max-width: 880px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-xl);
+    }
+
+    .admin-sidebar.is-open {
+        transform: translateX(0);
+    }
+
+    .admin-navbar {
+        left: 0;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        gap: 8px !important;
+    }
+
+    .admin-mobile-toggle {
+        display: flex;
+    }
+
+    .admin-sidebar-backdrop.is-open {
+        display: block;
+        position: fixed;
+        inset: 0;
+        top: 58px;
+        background: rgba(30, 23, 18, 0.4);
+        z-index: 95;
+        animation: admin-backdrop-in 0.2s ease;
+    }
+
+    .admin-main {
+        padding: 16px;
+    }
+
+    /* Non-essential chrome that just crowds a narrow navbar */
+    .admin-live-chip,
+    .admin-date-chip {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-main {
+        padding: 12px;
+    }
+
+    .admin-navbar-title {
+        font-size: 15px !important;
+    }
+
+    /* Collapse the CTA/Logout buttons to icon-only so their text can never
+       wrap inside the fixed-height navbar and overlap neighboring elements
+       (the "+ Add Appointment" pill wrapping onto 2 lines and colliding with
+       the date chip/logout button). The accessible name survives via
+       aria-label on each button, and the leading "+" / logout icon stay
+       visible so the affordance is still legible at a glance. */
+    .admin-cta-btn-label,
+    .admin-logout-btn-label {
+        display: none;
+    }
+
+    .admin-cta-btn,
+    .admin-logout-btn {
+        padding: 0 10px !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-sidebar-backdrop.is-open {
+        animation: none;
+    }
+}
+
+@keyframes admin-backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

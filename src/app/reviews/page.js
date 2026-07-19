@@ -92,21 +92,6 @@ export default function Reviews() {
                     </div>
                 </div>
             </section>
-
-            <footer className="footer">
-                <div className="container">
-                    <div className="footer-bottom">
-                        <p className="text-secondary">© 2024 Shivaji Hospital. All rights reserved.</p>
-                    </div>
-                </div>
-            </footer>
-
-            <Link href="/book-appointment" className="floating-book-btn" aria-label="Book Appointment">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Book</span>
-            </Link>
         </div>
     );
 }

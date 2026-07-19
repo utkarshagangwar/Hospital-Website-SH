@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabaseAdmin';
 import { uploadDoctorImage } from '@/utils/storage';
-import { requireRole } from '@/utils/auth';
+import { requirePermission } from '@/utils/auth';
 
 // GET: All doctors (admin, doctor, receptionist only)
 export async function GET(request) {
     // Check authentication and authorization
-    const { user, response: authError } = await requireRole(request, ['admin', 'doctor', 'receptionist']);
+    const { user, response: authError } = await requirePermission(request, 'appointments_view');
 
     if (authError) {
         return authError;
@@ -26,7 +26,7 @@ export async function GET(request) {
 // POST: Add a new doctor (admin only)
 export async function POST(request) {
     // Check authentication and authorization - admin only for creating doctors
-    const { user, response: authError } = await requireRole(request, ['admin']);
+    const { user, response: authError } = await requirePermission(request, 'doctors_manage');
 
     if (authError) {
         return authError;
